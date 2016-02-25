@@ -44,6 +44,8 @@ def minimize(model, data, algo, max_evals, trials):
 
     first_line = data_string.split("\n")[0]
     data_string = data_string.replace(first_line, "")
+    data_string = re.sub(r"return.*", "", data_string)
+
     split_data = data_string.split("\n")
     for i, line in enumerate(split_data):
         split_data[i] = line.strip() + "\n"
