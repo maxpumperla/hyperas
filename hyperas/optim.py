@@ -2,10 +2,11 @@ from hyperopt import fmin
 import os
 
 
-def minimize(fitted_model, algo, max_evals, trials):
+def minimize(model, data, algo, max_evals, trials):
     import inspect
     import re
-    model_string = inspect.getsource(fitted_model)
+    model_string = inspect.getsource(model)
+    data_string = inspect.getsource(data)
 
     parts = re.findall(r"(\w+(?=\s*[\=\(]\s*\{\{[^}]+}\}))", model_string)
     part_dict = {}
@@ -35,12 +36,25 @@ def minimize(fitted_model, algo, max_evals, trials):
 
     first_line = model_string.split("\n")[0]
     model_string = model_string.replace(first_line, "def keras_fmin_fnct(space):\n")
+
+    # model_string = re.sub(r"def \s*\w*\s*\(", "def keras_fmin_fnct(space, ", model_string)
     result = re.sub(r"(\{\{[^}]+}\})", lambda match: aug_parts.pop(0), model_string, count=len(parts))
     print('>>> Resulting replaced keras model:\n')
     print(result)
 
-    with open('./temp.py', 'w') as f:
+    first_line = data_string.split("\n")[0]
+    data_string = data_string.replace(first_line, "")
+    split_data = data_string.split("\n")
+    for i, line in enumerate(split_data):
+        split_data[i] = line.strip() + "\n"
+    data_string = ''.join(split_data)
+    print(">>> Data")
+    print(data_string)
+
+    with open('./temp_model.py', 'w') as f:
         f.write("from hyperopt import fmin, tpe, hp, STATUS_OK, Trials\n")
+        f.write(data_string)
+        f.write("\n\n")
         f.write(result)
         f.write("\n\n")
         f.write(space)
@@ -48,10 +62,10 @@ def minimize(fitted_model, algo, max_evals, trials):
 
     import sys
     sys.path.append(".")
-    from temp import keras_fmin_fnct, get_space
+    from temp_model import keras_fmin_fnct, get_space
     try:
-        os.remove('./temp.py')
-        os.remove('./temp.pyc')
+        os.remove('./temp_model.py')
+        os.remove('./temp_model.pyc')
     except OSError:
         pass
 
