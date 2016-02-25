@@ -30,11 +30,14 @@ def minimize(fitted_model, algo, max_evals, trials):
         space += "'" + name + "': hp." + param + ","
     space = space[:-1]
     space += "\n}"
+    print('>>> Hyperas search space:\n')
     print(space)
 
     first_line = model_string.split("\n")[0]
     model_string = model_string.replace(first_line, "def keras_fmin_fnct(space):\n")
     result = re.sub(r"(\{\{[^}]+}\})", lambda match: aug_parts.pop(0), model_string, count=len(parts))
+    print('>>> Resulting replaced keras model:\n')
+    print(result)
 
     with open('./temp.py', 'w') as f:
         f.write("from hyperopt import fmin, tpe, hp, STATUS_OK, Trials\n")
@@ -46,9 +49,11 @@ def minimize(fitted_model, algo, max_evals, trials):
     import sys
     sys.path.append(".")
     from temp import keras_fmin_fnct, get_space
-    os.remove('./temp.py')
-    os.remove('./temp.pyc')
-    sys.path.remove(".")
+    try:
+        os.remove('./temp.py')
+        os.remove('./temp.pyc')
+    except OSError:
+        pass
 
     best = fmin(keras_fmin_fnct, space=get_space(), algo=algo, max_evals=max_evals, trials=trials)
     return best
