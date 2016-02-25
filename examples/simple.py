@@ -4,13 +4,9 @@ from hyperas import optim
 from hyperas.distributions import choice, uniform
 
 
-def keras_model():
+def data():
     from keras.datasets import mnist
-    from keras.models import Sequential
-    from keras.layers.core import Dense, Dropout, Activation
-    from keras.optimizers import RMSprop
     from keras.utils import np_utils
-
     (X_train, y_train), (X_test, y_test) = mnist.load_data()
     X_train = X_train.reshape(60000, 784)
     X_test = X_test.reshape(10000, 784)
@@ -19,9 +15,14 @@ def keras_model():
     X_train /= 255
     X_test /= 255
     nb_classes = 10
-
     Y_train = np_utils.to_categorical(y_train, nb_classes)
     Y_test = np_utils.to_categorical(y_test, nb_classes)
+
+
+def model():
+    from keras.models import Sequential
+    from keras.layers.core import Dense, Dropout, Activation
+    from keras.optimizers import RMSprop
 
     model = Sequential()
     model.add(Dense(512, input_shape=(784,)))
@@ -48,8 +49,6 @@ def keras_model():
     return {'loss': -score[1], 'status': STATUS_OK}
 
 if __name__ == '__main__':
-    best_run = optim.minimize(keras_model,
-                              algo=tpe.suggest,
-                              max_evals=10,
-                              trials=Trials())
+    best_run = optim.minimize(model=model, data=data,
+                              algo=tpe.suggest, max_evals=10, trials=Trials())
     print(best_run)

@@ -4,17 +4,12 @@ from hyperas import optim
 from hyperas.distributions import choice, uniform
 
 
-def keras_model():
+def data():
     from keras.preprocessing import sequence
-    from keras.models import Sequential
-    from keras.layers.core import Dense, Dropout, Activation
-    from keras.layers.embeddings import Embedding
-    from keras.layers.recurrent import LSTM
     from keras.datasets import imdb
-    from keras.callbacks import EarlyStopping, ModelCheckpoint
 
-    max_features = 20000
     maxlen = 100
+    max_features = 20000
 
     print('Loading data...')
     (X_train, y_train), (X_test, y_test) = imdb.load_data(nb_words=max_features, test_split=0.2)
@@ -26,6 +21,14 @@ def keras_model():
     X_test = sequence.pad_sequences(X_test, maxlen=maxlen)
     print('X_train shape:', X_train.shape)
     print('X_test shape:', X_test.shape)
+
+
+def model():
+    from keras.models import Sequential
+    from keras.layers.core import Dense, Dropout, Activation
+    from keras.layers.embeddings import Embedding
+    from keras.layers.recurrent import LSTM
+    from keras.callbacks import EarlyStopping, ModelCheckpoint
 
     print('Build model...')
     model = Sequential()
@@ -58,7 +61,8 @@ def keras_model():
     return {'loss': -acc, 'status': STATUS_OK}
 
 if __name__ == '__main__':
-    best_run = optim.minimize(keras_model,
+    best_run = optim.minimize(model=model,
+                              data=data,
                               algo=tpe.suggest,
                               max_evals=10,
                               trials=Trials())
