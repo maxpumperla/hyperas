@@ -54,15 +54,15 @@ best_run = optim.minimize(model=model,
 In this example we use at most 10 evaluation runs and the TPE algorithm from hyperopt for optimization.
 
 ## Complete example
-An extended version of the above example in one script would read as follows.
+An extended version of the above example in one script reads as follows:
 
-**Note: It is important to wrap your data and model into functions, including necessary imports, as shown below, and then pass them as parameters to the minimizer.**
+**Note:** It is important to wrap your data and model into functions, including necessary imports, as shown below, and then pass them as parameters to the minimizer. ```data()``` returns the data the ```model()``` needs. Internally, this is a cheap, but necessary trick to avoid loading data on each optimization run.
+
 ```{python}
 from __future__ import print_function
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas import optim
 from hyperas.distributions import choice, uniform
-
 
 def data():
     from keras.datasets import mnist
@@ -77,9 +77,10 @@ def data():
     nb_classes = 10
     Y_train = np_utils.to_categorical(y_train, nb_classes)
     Y_test = np_utils.to_categorical(y_test, nb_classes)
+    return X_train, Y_train, X_test, Y_test
 
 
-def model():
+def model(X_train, Y_train, X_test, Y_test):
     from keras.models import Sequential
     from keras.layers.core import Dense, Dropout, Activation
     from keras.optimizers import RMSprop
