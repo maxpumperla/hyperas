@@ -17,9 +17,10 @@ def data():
     nb_classes = 10
     Y_train = np_utils.to_categorical(y_train, nb_classes)
     Y_test = np_utils.to_categorical(y_test, nb_classes)
+    return X_train, Y_train, X_test, Y_test
 
 
-def model():
+def model(X_train, Y_train, X_test, Y_test):
     from keras.models import Sequential
     from keras.layers.core import Dense, Dropout, Activation
     from keras.optimizers import RMSprop

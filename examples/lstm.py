@@ -22,8 +22,10 @@ def data():
     print('X_train shape:', X_train.shape)
     print('X_test shape:', X_test.shape)
 
+    return X_train, X_test, y_train, y_test, max_features, maxlen
 
-def model():
+
+def model(X_train, X_test, y_train, y_test, max_features, maxlen):
     from keras.models import Sequential
     from keras.layers.core import Dense, Dropout, Activation
     from keras.layers.embeddings import Embedding
