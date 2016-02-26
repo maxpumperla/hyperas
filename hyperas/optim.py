@@ -66,7 +66,7 @@ def minimize(model, data, algo, max_evals, trials):
     sys.path.append(".")
     from temp_model import keras_fmin_fnct, get_space
     try:
-        os.remove('./temp_model.py')
+        #os.remove('./temp_model.py')
         os.remove('./temp_model.pyc')
     except OSError:
         pass
