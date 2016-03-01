@@ -66,10 +66,18 @@ def minimize(model, data, algo, max_evals, trials):
     sys.path.append(".")
     from temp_model import keras_fmin_fnct, get_space
     try:
-        #os.remove('./temp_model.py')
+        os.remove('./temp_model.py')
         os.remove('./temp_model.pyc')
     except OSError:
         pass
 
-    best = fmin(keras_fmin_fnct, space=get_space(), algo=algo, max_evals=max_evals, trials=trials)
-    return best
+    best_run = fmin(keras_fmin_fnct, space=get_space(), algo=algo, max_evals=max_evals, trials=trials)
+
+    best_model = None
+    for trial in trials:
+        vals = trial.get('misc').get('vals')
+        for key in vals.keys():
+            vals[key] = vals[key][0]
+        if trial.get('misc').get('vals') == best_run and 'model' in trial.get('result').keys():
+            best_model = trial.get('result').get('model')
+    return best_run, best_model
