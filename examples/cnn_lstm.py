@@ -67,12 +67,12 @@ def model(X_train, X_test, y_train, y_test, maxlen, max_features):
                                 show_accuracy=True)
     print('Test score:', score)
     print('Test accuracy:', acc)
-    return {'loss': -acc, 'status': STATUS_OK}
+    return {'loss': -acc, 'status': STATUS_OK, 'model': model}
 
 if __name__ == '__main__':
-    best_run = optim.minimize(model=model,
-                              data=data,
-                              algo=rand.suggest,
-                              max_evals=5,
-                              trials=Trials())
+    best_run, best_model = optim.minimize(model=model,
+                                          data=data,
+                                          algo=rand.suggest,
+                                          max_evals=5,
+                                          trials=Trials())
     print(best_run)

@@ -60,12 +60,12 @@ def model(X_train, X_test, y_train, y_test, max_features, maxlen):
     score, acc = model.evaluate(X_test, y_test, show_accuracy=True, verbose=0)
 
     print('Test accuracy:', acc)
-    return {'loss': -acc, 'status': STATUS_OK}
+    return {'loss': -acc, 'status': STATUS_OK, 'model': model}
 
 if __name__ == '__main__':
-    best_run = optim.minimize(model=model,
-                              data=data,
-                              algo=tpe.suggest,
-                              max_evals=10,
-                              trials=Trials())
+    best_run, best_model = optim.minimize(model=model,
+                                          data=data,
+                                          algo=tpe.suggest,
+                                          max_evals=10,
+                                          trials=Trials())
     print(best_run)
