@@ -54,17 +54,25 @@ best_run = optim.minimize(model=model,
 In this example we use at most 10 evaluation runs and the TPE algorithm from hyperopt for optimization.
 
 ## Complete example
-An extended version of the above example in one script reads as follows:
-
 **Note:** It is important to wrap your data and model into functions, including necessary imports, as shown below, and then pass them as parameters to the minimizer. ```data()``` returns the data the ```model()``` needs. Internally, this is a cheap, but necessary trick to avoid loading data on each optimization run.
+An extended version of the above example in one script reads as follows. This example shows many potential use cases of hyperas, including:
+- Varying dropout probabilities, sampling from a uniform distribution
+- Different layer output sizes
+- Different optimization algorithms to use
+- Varying choices of activation functions
+- Conditionally adding layers depending on a choice
+- Swapping whole sets of layers
+
 
 ```{python}
-from __future__ import print_function
-from hyperopt import Trials, STATUS_OK, tpe
-from hyperas import optim
-from hyperas.distributions import choice, uniform
-
 def data():
+    '''
+    Data providing function:
+
+    Make sure to have every relevant import statement included here and return data as
+    used in model function below. This function is separated from model() so that hyperopt
+    won't reload data for each evaluation run.
+    '''
     from keras.datasets import mnist
     from keras.utils import np_utils
     (X_train, y_train), (X_test, y_test) = mnist.load_data()
@@ -81,22 +89,38 @@ def data():
 
 
 def model(X_train, Y_train, X_test, Y_test):
+    '''
+    Model providing function:
+
+    Create Keras model with double curly brackets dropped-in as needed.
+    Return value has to be a valid python dictionary with two customary keys:
+        - loss: Specify a numeric evaluation metric to be minimized
+        - status: Just use STATUS_OK and see hyperopt documentation if not feasible
+    The last one is optional, though recommended, namely:
+        - model: specify the model just created so that we can later use it again.
+    '''
     from keras.models import Sequential
     from keras.layers.core import Dense, Dropout, Activation
-    from keras.optimizers import RMSprop
 
     model = Sequential()
     model.add(Dense(512, input_shape=(784,)))
     model.add(Activation('relu'))
     model.add(Dropout({{uniform(0, 1)}}))
     model.add(Dense({{choice([256, 512, 1024])}}))
-    model.add(Activation('relu'))
+    model.add(Activation({{choice(['relu', 'sigmoid'])}}))
     model.add(Dropout({{uniform(0, 1)}}))
+
+    # If we choose 'four', add an additional fourth layer
+    if conditional({{choice(['three', 'four'])}}) == 'four':
+        model.add(Dense(100))
+        # We can also choose between complete sets of layers
+        model.add({{choice([Dropout(0.5), Activation('linear')])}})
+        model.add(Activation('relu'))
+
     model.add(Dense(10))
     model.add(Activation('softmax'))
 
-    rms = RMSprop()
-    model.compile(loss='categorical_crossentropy', optimizer=rms)
+    model.compile(loss='categorical_crossentropy', optimizer={{choice(['rmsprop', 'adam', 'sgd'])}})
 
     model.fit(X_train, Y_train,
               batch_size={{choice([64, 128])}},
@@ -104,13 +128,17 @@ def model(X_train, Y_train, X_test, Y_test):
               show_accuracy=True,
               verbose=2,
               validation_data=(X_test, Y_test))
-    score = model.evaluate(X_test, Y_test,
-                           show_accuracy=True, verbose=0)
-    print('Test accuracy:', score[1])
-    return {'loss': -score[1], 'status': STATUS_OK}
+    score, acc = model.evaluate(X_test, Y_test, show_accuracy=True, verbose=0)
+    print('Test accuracy:', acc)
+    return {'loss': -acc, 'status': STATUS_OK, 'model': model}
 
 if __name__ == '__main__':
-    best_run = optim.minimize(model=model, data=data,
-                              algo=tpe.suggest, max_evals=10, trials=Trials())
-    print(best_run)
+    best_run, best_model = optim.minimize(model=model,
+                                          data=data,
+                                          algo=tpe.suggest,
+                                          max_evals=5,
+                                          trials=Trials())
+    X_train, Y_train, X_test, Y_test = data()
+    print("Evalutation of best performing model:")
+    print(best_model.evaluate(X_test, Y_test))
 ```
