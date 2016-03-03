@@ -1,4 +1,5 @@
 from hyperopt import fmin
+from .ensemble import VotingModel
 import os
 import inspect
 import re
@@ -26,6 +27,36 @@ def minimize(model, data, algo, max_evals, trials):
     A pair consisting of the results dictionary of the best run and the corresponing
     keras model.
     """
+    best_run = base_minimizer(model, data, algo, max_evals, trials)
+
+    best_model = None
+    for trial in trials:
+        vals = trial.get('misc').get('vals')
+        for key in vals.keys():
+            vals[key] = vals[key][0]
+        if trial.get('misc').get('vals') == best_run and 'model' in trial.get('result').keys():
+            best_model = trial.get('result').get('model')
+
+    return best_run, best_model
+
+
+def best_ensemble(nb_ensemble_models, model, data, algo, max_evals, trials, voting='hard', weights=None):
+    model_list = best_models(nb_models=nb_ensemble_models, model=model,
+                             data=data, algo=algo, max_evals=max_evals, trials=trials)
+    return VotingModel(model_list, voting, weights)
+
+
+def best_models(nb_models, model, data, algo, max_evals, trials):
+    base_minimizer(model, data, algo, max_evals, trials)
+    if len(trials) < nb_models:
+        nb_models = len(trials)
+    scores = [trial.get('misc').get('vals') for trial in trials]
+    cut_off = sorted(scores, reverse=True)[nb_models-1]
+    model_list = [trial.get('result').get('model') for trial in trials if trial.get('misc').get('vals') >= cut_off]
+    return model_list
+
+
+def base_minimizer(model, data, algo, max_evals, trials):
     model_string = inspect.getsource(model)
     lines = model_string.split("\n")
     raw_imports = [line.strip() + "\n" for line in lines if "import" in line]
@@ -62,15 +93,7 @@ def minimize(model, data, algo, max_evals, trials):
                     max_evals=max_evals,
                     trials=trials)
 
-    best_model = None
-    for trial in trials:
-        vals = trial.get('misc').get('vals')
-        for key in vals.keys():
-            vals[key] = vals[key][0]
-        if trial.get('misc').get('vals') == best_run and 'model' in trial.get('result').keys():
-            best_model = trial.get('result').get('model')
-
-    return best_run, best_model
+    return best_run
 
 
 def get_hyperopt_space(parts, hyperopt_params):
