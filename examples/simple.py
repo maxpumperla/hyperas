@@ -2,6 +2,8 @@ from __future__ import print_function
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas import optim
 from hyperas.distributions import choice, uniform
+from sklearn.metrics import accuracy_score
+from keras.utils import np_utils
 
 
 def data():
@@ -66,11 +68,14 @@ def model(X_train, Y_train, X_test, Y_test):
     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
 
 if __name__ == '__main__':
+
+    X_train, Y_train, X_test, Y_test = data()
+
     best_run, best_model = optim.minimize(model=model,
                                           data=data,
                                           algo=tpe.suggest,
                                           max_evals=5,
                                           trials=Trials())
-    X_train, Y_train, X_test, Y_test = data()
+                                          
     print("Evalutation of best performing model:")
     print(best_model.evaluate(X_test, Y_test))
