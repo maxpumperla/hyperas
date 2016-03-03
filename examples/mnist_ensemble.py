@@ -58,7 +58,7 @@ def model(X_train, X_test, Y_train, Y_test):
 
 if __name__ == '__main__':
 
-    X_train, Y_train, X_test, Y_test = data()
+    X_train, X_test, Y_train, Y_test = data()
 
     '''
     Generate ensemble model from optimization run:
