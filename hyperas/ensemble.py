@@ -37,17 +37,17 @@ class VotingModel(object):
 
         if self.voting == 'hard':
             for i, pred in enumerate(predictions):
-                pred = map(lambda probas: np.argmax(probas), pred)
+                pred = map(lambda probas: np.argmax(probas, axis=-1), pred)
                 predictions[i] = np.asarray(pred).reshape(nb_preds, 1)
             argmax_list = list(np.concatenate(predictions, axis=1))
             votes = np.asarray(map(lambda arr: max(set(arr)), argmax_list))
         if self.voting == 'soft':
             for i, pred in enumerate(predictions):
-                pred = map(lambda probas: probas * weights[i], pred)
+                pred = map(lambda probas: probas * self.weights[i], pred)
                 predictions[i] = np.asarray(pred).reshape(nb_preds, nb_classes, 1)
             weighted_preds = np.concatenate(predictions, axis=2)
             weighted_avg = np.mean(weighted_preds, axis=2)
-            votes  = np.argmax(weighted_avg, axis=1)
+            votes = np.argmax(weighted_avg, axis=1)
 
         return votes
 

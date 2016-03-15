@@ -44,7 +44,7 @@ def model(X_train, X_test, Y_train, Y_test):
     rms = RMSprop()
     model.compile(loss='categorical_crossentropy', optimizer=rms)
 
-    nb_epoch = 1
+    nb_epoch = 10
     batch_size = 128
 
     model.fit(X_train, Y_train,
@@ -53,7 +53,7 @@ def model(X_train, X_test, Y_train, Y_test):
               validation_data=(X_test, Y_test))
 
     score, acc = model.evaluate(X_test, Y_test, show_accuracy=True, verbose=0)
-    
+
     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
 
 if __name__ == '__main__':
@@ -62,12 +62,12 @@ if __name__ == '__main__':
 
     '''
     Generate ensemble model from optimization run:
-    First, run hyperas optimization on specified setup, i.e. 20 trials with TPE,
+    First, run hyperas optimization on specified setup, i.e. 10 trials with TPE,
     then return the best 5 models and create a majority voting model from it.
     '''
-    ensemble_model = optim.best_ensemble(nb_ensemble_models=10,
+    ensemble_model = optim.best_ensemble(nb_ensemble_models=5,
                                          model=model, data=data,
-                                         algo=rand.suggest, max_evals=20,
+                                         algo=rand.suggest, max_evals=10,
                                          trials=Trials(),
                                          voting='hard')
     preds = ensemble_model.predict(X_test)
