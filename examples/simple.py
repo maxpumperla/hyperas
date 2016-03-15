@@ -76,6 +76,6 @@ if __name__ == '__main__':
                                           algo=tpe.suggest,
                                           max_evals=5,
                                           trials=Trials())
-                                          
+
     print("Evalutation of best performing model:")
     print(best_model.evaluate(X_test, Y_test))

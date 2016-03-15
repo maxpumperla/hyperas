@@ -59,6 +59,8 @@ def best_models(nb_models, model, data, algo, max_evals, trials):
 def base_minimizer(model, data, algo, max_evals, trials):
     model_string = inspect.getsource(model)
     lines = model_string.split("\n")
+    lines = [line for line in lines if not line.strip().startswith('#')]
+
     raw_imports = [line.strip() + "\n" for line in lines if "import" in line]
     imports = ''.join(raw_imports)
 
