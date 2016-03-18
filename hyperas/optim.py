@@ -7,7 +7,7 @@ import sys
 sys.path.append(".")
 
 
-def minimize(model, data, algo, max_evals, trials):
+def minimize(model, data, algo, max_evals, trials, rseed=1337):
     """Minimize a keras model for given data and implicit hyperparameters.
 
     Parameters
@@ -21,13 +21,14 @@ def minimize(model, data, algo, max_evals, trials):
     max_evals: Maximum number of optimization runs
     trials: A hyperopt trials object, used to store intermediate results for all
         optimization runs
+    rseed: Integer random seed for experiments
 
     Returns
     -------
     A pair consisting of the results dictionary of the best run and the corresponing
     keras model.
     """
-    best_run = base_minimizer(model, data, algo, max_evals, trials)
+    best_run = base_minimizer(model, data, algo, max_evals, trials, rseed)
 
     best_model = None
     for trial in trials:
@@ -50,13 +51,13 @@ def best_models(nb_models, model, data, algo, max_evals, trials):
     base_minimizer(model, data, algo, max_evals, trials)
     if len(trials) < nb_models:
         nb_models = len(trials)
-    scores = [trial.get('misc').get('vals') for trial in trials]
+    scores = [trial.get('result').get('loss') for trial in trials]
     cut_off = sorted(scores, reverse=True)[nb_models-1]
-    model_list = [trial.get('result').get('model') for trial in trials if trial.get('misc').get('vals') >= cut_off]
+    model_list = [trial.get('result').get('model') for trial in trials if trial.get('result').get('loss') >= cut_off]
     return model_list
 
 
-def base_minimizer(model, data, algo, max_evals, trials):
+def get_hyperopt_model_string(model, data):
     model_string = inspect.getsource(model)
     lines = model_string.split("\n")
     lines = [line for line in lines if not line.strip().startswith('#')]
@@ -76,7 +77,17 @@ def base_minimizer(model, data, algo, max_evals, trials):
     data_string = retrieve_data_string(data)
     model = hyperopt_keras_model(model_string, parts, aug_parts)
 
-    write_temp_files(imports, model, data_string, space)
+    temp_str = temp_string(imports, model, data_string, space)
+    return temp_str
+
+
+def base_minimizer(model, data, algo, max_evals, trials, rseed=1337, full_model_string=None):
+
+    if full_model_string is not None:
+        model_str = full_model_string
+    else:
+        model_str = get_hyperopt_model_string(model, data)
+    write_temp_files(model_str)
 
     try:
         from temp_model import keras_fmin_fnct, get_space
@@ -93,7 +104,8 @@ def base_minimizer(model, data, algo, max_evals, trials):
                     space=get_space(),
                     algo=algo,
                     max_evals=max_evals,
-                    trials=trials)
+                    trials=trials,
+                    rseed=rseed)
 
     return best_run
 
@@ -163,14 +175,15 @@ def hyperopt_keras_model(model_string, parts, aug_parts):
     return result
 
 
-def write_temp_files(imports, model, data, space, path='./temp_model.py'):
+def temp_string(imports, model, data, space):
+    temp = ("from hyperopt import fmin, tpe, hp, STATUS_OK, Trials\n" +
+            "from hyperas.distributions import conditional\n" +
+            imports + data + model + "\n" + space)
+    return temp
+
+
+def write_temp_files(tmp_str, path='./temp_model.py'):
     with open(path, 'w') as f:
-        f.write("from hyperopt import fmin, tpe, hp, STATUS_OK, Trials\n")
-        f.write("from hyperas.distributions import conditional\n")
-        f.write(imports)
-        f.write(data)
-        f.write(model)
-        f.write("\n")
-        f.write(space)
+        f.write(tmp_str)
         f.close()
     return
