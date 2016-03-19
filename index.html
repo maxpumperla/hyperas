@@ -1,0 +1,203 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Hyperas by maxpumperla</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-dark.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+      <header>
+        <h1>Hyperas</h1>
+        <p>Keras + Hyperopt: A very simple wrapper for convenient hyperparameter optimization</p>
+      </header>
+
+      <div id="banner">
+        <span id="logo"></span>
+
+        <a href="https://github.com/maxpumperla/hyperas" class="button fork"><strong>View On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/maxpumperla/hyperas/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/maxpumperla/hyperas/tarball/master" class="button">TAR</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+        <h1>
+<a id="hyperas-" class="anchor" href="#hyperas-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Hyperas <a href="https://travis-ci.org/maxpumperla/hyperas"><img src="https://travis-ci.org/maxpumperla/hyperas.svg?branch=master" alt="Build Status"></a>
+</h1>
+
+<p>A very simple convenience wrapper around hyperopt for fast prototyping with keras models. Hyperas lets you use the power of hyperopt without having to learn the syntax of it. Instead, just define your keras model as you are used to, but use a simple template notation to define hyper-parameter ranges to tune.</p>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
+
+<div class="highlight highlight-source-python"><pre>pip install hyperas</pre></div>
+
+<h2>
+<a id="quick-start" class="anchor" href="#quick-start" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Quick start</h2>
+
+<p>Assume you have an existing keras model like the following.</p>
+
+<div class="highlight highlight-source-python"><pre>model <span class="pl-k">=</span> Sequential()
+model.add(Dense(<span class="pl-c1">512</span>, <span class="pl-v">input_shape</span><span class="pl-k">=</span>(<span class="pl-c1">784</span>,)))
+model.add(Activation(<span class="pl-s"><span class="pl-pds">'</span>relu<span class="pl-pds">'</span></span>))
+model.add(Dropout(<span class="pl-c1">0.2</span>))
+model.add(Dense(<span class="pl-c1">512</span>))
+model.add(Activation(<span class="pl-s"><span class="pl-pds">'</span>relu<span class="pl-pds">'</span></span>))
+model.add(Dropout(<span class="pl-c1">0.2</span>)
+model.add(Dense(<span class="pl-c1">10</span>))
+model.add(Activation(<span class="pl-s"><span class="pl-pds">'</span>softmax<span class="pl-pds">'</span></span>))</pre></div>
+
+<p>To do hyper-parameter optimization on this model, just wrap the parameters you want to optimize into double curly brackets and choose a distribution over which to run the algorithm. In the above example, let's say we want to optimize for the best dropout probability in both dropout layers. Choosing a uniform distribution over the interval <code>[0,1]</code>, this translates into the following definition.</p>
+
+<div class="highlight highlight-source-python"><pre><span class="pl-k">from</span> hyperas.distributions <span class="pl-k">import</span> uniform
+
+model <span class="pl-k">=</span> Sequential()
+model.add(Dense(<span class="pl-c1">512</span>, <span class="pl-v">input_shape</span><span class="pl-k">=</span>(<span class="pl-c1">784</span>,)))
+model.add(Activation(<span class="pl-s"><span class="pl-pds">'</span>relu<span class="pl-pds">'</span></span>))
+model.add(Dropout({{uniform(<span class="pl-c1">0</span>, <span class="pl-c1">1</span>)}}))
+model.add(Dense(<span class="pl-c1">512</span>))
+model.add(Activation(<span class="pl-s"><span class="pl-pds">'</span>relu<span class="pl-pds">'</span></span>))
+model.add(Dropout({{uniform(<span class="pl-c1">0</span>, <span class="pl-c1">1</span>)}}))
+model.add(Dense(<span class="pl-c1">10</span>))
+model.add(Activation(<span class="pl-s"><span class="pl-pds">'</span>softmax<span class="pl-pds">'</span></span>))</pre></div>
+
+<p>After having trained the model, to optimize, we also have to define which evaluation metric of the model is important to us. For example, if we wish to optimize for accuracy, the following example does the trick:</p>
+
+<div class="highlight highlight-source-python"><pre>score <span class="pl-k">=</span> model.evaluate(<span class="pl-c1">X_test</span>, <span class="pl-c1">Y_test</span>, <span class="pl-v">show_accuracy</span><span class="pl-k">=</span><span class="pl-c1">True</span>, <span class="pl-v">verbose</span><span class="pl-k">=</span><span class="pl-c1">0</span>)
+accuracy <span class="pl-k">=</span> score[<span class="pl-c1">1</span>]
+<span class="pl-k">return</span> {<span class="pl-s"><span class="pl-pds">'</span>loss<span class="pl-pds">'</span></span>: <span class="pl-k">-</span>accuracy, <span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span>: <span class="pl-c1">STATUS_OK</span>}</pre></div>
+
+<p>The last step is to actually run the optimization, which is done as follows:</p>
+
+<div class="highlight highlight-source-python"><pre>best_run <span class="pl-k">=</span> optim.minimize(<span class="pl-v">model</span><span class="pl-k">=</span>model,
+                          <span class="pl-v">data</span><span class="pl-k">=</span>data,
+                          <span class="pl-v">algo</span><span class="pl-k">=</span>tpe.suggest,
+                          <span class="pl-v">max_evals</span><span class="pl-k">=</span><span class="pl-c1">10</span>,
+                          <span class="pl-v">trials</span><span class="pl-k">=</span>Trials())</pre></div>
+
+<p>In this example we use at most 10 evaluation runs and the TPE algorithm from hyperopt for optimization.</p>
+
+<h2>
+<a id="complete-example" class="anchor" href="#complete-example" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Complete example</h2>
+
+<p><strong>Note:</strong> It is important to wrap your data and model into functions, including necessary imports, as shown below, and then pass them as parameters to the minimizer. <code>data()</code> returns the data the <code>model()</code> needs. Internally, this is a cheap, but necessary trick to avoid loading data on each optimization run.
+An extended version of the above example in one script reads as follows. This example shows many potential use cases of hyperas, including:</p>
+
+<ul>
+<li>Varying dropout probabilities, sampling from a uniform distribution</li>
+<li>Different layer output sizes</li>
+<li>Different optimization algorithms to use</li>
+<li>Varying choices of activation functions</li>
+<li>Conditionally adding layers depending on a choice</li>
+<li>Swapping whole sets of layers</li>
+</ul>
+
+<div class="highlight highlight-source-python"><pre><span class="pl-k">from</span> __future__ <span class="pl-k">import</span> print_function
+<span class="pl-k">from</span> hyperopt <span class="pl-k">import</span> Trials, <span class="pl-c1">STATUS_OK</span>, tpe
+<span class="pl-k">from</span> hyperas <span class="pl-k">import</span> optim
+<span class="pl-k">from</span> hyperas.distributions <span class="pl-k">import</span> choice, uniform, conditional
+
+<span class="pl-k">def</span> <span class="pl-en">data</span>():
+    <span class="pl-s"><span class="pl-pds">'''</span></span>
+<span class="pl-s">    Data providing function:</span>
+<span class="pl-s"></span>
+<span class="pl-s">    Make sure to have every relevant import statement included here and return data as</span>
+<span class="pl-s">    used in model function below. This function is separated from model() so that hyperopt</span>
+<span class="pl-s">    won't reload data for each evaluation run.</span>
+<span class="pl-s">    <span class="pl-pds">'''</span></span>
+    <span class="pl-k">from</span> keras.datasets <span class="pl-k">import</span> mnist
+    <span class="pl-k">from</span> keras.utils <span class="pl-k">import</span> np_utils
+    (<span class="pl-c1">X_train</span>, y_train), (<span class="pl-c1">X_test</span>, y_test) <span class="pl-k">=</span> mnist.load_data()
+    <span class="pl-c1">X_train</span> <span class="pl-k">=</span> <span class="pl-c1">X_train</span>.reshape(<span class="pl-c1">60000</span>, <span class="pl-c1">784</span>)
+    <span class="pl-c1">X_test</span> <span class="pl-k">=</span> <span class="pl-c1">X_test</span>.reshape(<span class="pl-c1">10000</span>, <span class="pl-c1">784</span>)
+    <span class="pl-c1">X_train</span> <span class="pl-k">=</span> <span class="pl-c1">X_train</span>.astype(<span class="pl-s"><span class="pl-pds">'</span>float32<span class="pl-pds">'</span></span>)
+    <span class="pl-c1">X_test</span> <span class="pl-k">=</span> <span class="pl-c1">X_test</span>.astype(<span class="pl-s"><span class="pl-pds">'</span>float32<span class="pl-pds">'</span></span>)
+    <span class="pl-c1">X_train</span> <span class="pl-k">/=</span> <span class="pl-c1">255</span>
+    <span class="pl-c1">X_test</span> <span class="pl-k">/=</span> <span class="pl-c1">255</span>
+    nb_classes <span class="pl-k">=</span> <span class="pl-c1">10</span>
+    <span class="pl-c1">Y_train</span> <span class="pl-k">=</span> np_utils.to_categorical(y_train, nb_classes)
+    <span class="pl-c1">Y_test</span> <span class="pl-k">=</span> np_utils.to_categorical(y_test, nb_classes)
+    <span class="pl-k">return</span> <span class="pl-c1">X_train</span>, <span class="pl-c1">Y_train</span>, <span class="pl-c1">X_test</span>, <span class="pl-c1">Y_test</span>
+
+
+<span class="pl-k">def</span> <span class="pl-en">model</span>(<span class="pl-smi">X_train</span>, <span class="pl-smi">Y_train</span>, <span class="pl-smi">X_test</span>, <span class="pl-smi">Y_test</span>):
+    <span class="pl-s"><span class="pl-pds">'''</span></span>
+<span class="pl-s">    Model providing function:</span>
+<span class="pl-s"></span>
+<span class="pl-s">    Create Keras model with double curly brackets dropped-in as needed.</span>
+<span class="pl-s">    Return value has to be a valid python dictionary with two customary keys:</span>
+<span class="pl-s">        - loss: Specify a numeric evaluation metric to be minimized</span>
+<span class="pl-s">        - status: Just use STATUS_OK and see hyperopt documentation if not feasible</span>
+<span class="pl-s">    The last one is optional, though recommended, namely:</span>
+<span class="pl-s">        - model: specify the model just created so that we can later use it again.</span>
+<span class="pl-s">    <span class="pl-pds">'''</span></span>
+    <span class="pl-k">from</span> keras.models <span class="pl-k">import</span> Sequential
+    <span class="pl-k">from</span> keras.layers.core <span class="pl-k">import</span> Dense, Dropout, Activation
+
+    model <span class="pl-k">=</span> Sequential()
+    model.add(Dense(<span class="pl-c1">512</span>, <span class="pl-v">input_shape</span><span class="pl-k">=</span>(<span class="pl-c1">784</span>,)))
+    model.add(Activation(<span class="pl-s"><span class="pl-pds">'</span>relu<span class="pl-pds">'</span></span>))
+    model.add(Dropout({{uniform(<span class="pl-c1">0</span>, <span class="pl-c1">1</span>)}}))
+    model.add(Dense({{choice([<span class="pl-c1">256</span>, <span class="pl-c1">512</span>, <span class="pl-c1">1024</span>])}}))
+    model.add(Activation({{choice([<span class="pl-s"><span class="pl-pds">'</span>relu<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>sigmoid<span class="pl-pds">'</span></span>])}}))
+    model.add(Dropout({{uniform(<span class="pl-c1">0</span>, <span class="pl-c1">1</span>)}}))
+
+    <span class="pl-c"># If we choose 'four', add an additional fourth layer</span>
+    <span class="pl-k">if</span> conditional({{choice([<span class="pl-s"><span class="pl-pds">'</span>three<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>four<span class="pl-pds">'</span></span>])}}) <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">'</span>four<span class="pl-pds">'</span></span>:
+        model.add(Dense(<span class="pl-c1">100</span>))
+        <span class="pl-c"># We can also choose between complete sets of layers</span>
+        model.add({{choice([Dropout(<span class="pl-c1">0.5</span>), Activation(<span class="pl-s"><span class="pl-pds">'</span>linear<span class="pl-pds">'</span></span>)])}})
+        model.add(Activation(<span class="pl-s"><span class="pl-pds">'</span>relu<span class="pl-pds">'</span></span>))
+
+    model.add(Dense(<span class="pl-c1">10</span>))
+    model.add(Activation(<span class="pl-s"><span class="pl-pds">'</span>softmax<span class="pl-pds">'</span></span>))
+
+    model.compile(<span class="pl-v">loss</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">'</span>categorical_crossentropy<span class="pl-pds">'</span></span>, <span class="pl-v">optimizer</span><span class="pl-k">=</span>{{choice([<span class="pl-s"><span class="pl-pds">'</span>rmsprop<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>adam<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>sgd<span class="pl-pds">'</span></span>])}})
+
+    model.fit(<span class="pl-c1">X_train</span>, <span class="pl-c1">Y_train</span>,
+              <span class="pl-v">batch_size</span><span class="pl-k">=</span>{{choice([<span class="pl-c1">64</span>, <span class="pl-c1">128</span>])}},
+              <span class="pl-v">nb_epoch</span><span class="pl-k">=</span><span class="pl-c1">1</span>,
+              <span class="pl-v">show_accuracy</span><span class="pl-k">=</span><span class="pl-c1">True</span>,
+              <span class="pl-v">verbose</span><span class="pl-k">=</span><span class="pl-c1">2</span>,
+              <span class="pl-v">validation_data</span><span class="pl-k">=</span>(<span class="pl-c1">X_test</span>, <span class="pl-c1">Y_test</span>))
+    score, acc <span class="pl-k">=</span> model.evaluate(<span class="pl-c1">X_test</span>, <span class="pl-c1">Y_test</span>, <span class="pl-v">show_accuracy</span><span class="pl-k">=</span><span class="pl-c1">True</span>, <span class="pl-v">verbose</span><span class="pl-k">=</span><span class="pl-c1">0</span>)
+    <span class="pl-c1">print</span>(<span class="pl-s"><span class="pl-pds">'</span>Test accuracy:<span class="pl-pds">'</span></span>, acc)
+    <span class="pl-k">return</span> {<span class="pl-s"><span class="pl-pds">'</span>loss<span class="pl-pds">'</span></span>: <span class="pl-k">-</span>acc, <span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span>: <span class="pl-c1">STATUS_OK</span>, <span class="pl-s"><span class="pl-pds">'</span>model<span class="pl-pds">'</span></span>: model}
+
+<span class="pl-k">if</span> <span class="pl-c1">__name__</span> <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">'</span>__main__<span class="pl-pds">'</span></span>:
+    best_run, best_model <span class="pl-k">=</span> optim.minimize(<span class="pl-v">model</span><span class="pl-k">=</span>model,
+                                          <span class="pl-v">data</span><span class="pl-k">=</span>data,
+                                          <span class="pl-v">algo</span><span class="pl-k">=</span>tpe.suggest,
+                                          <span class="pl-v">max_evals</span><span class="pl-k">=</span><span class="pl-c1">5</span>,
+                                          <span class="pl-v">trials</span><span class="pl-k">=</span>Trials())
+    <span class="pl-c1">X_train</span>, <span class="pl-c1">Y_train</span>, <span class="pl-c1">X_test</span>, <span class="pl-c1">Y_test</span> <span class="pl-k">=</span> data()
+    <span class="pl-c1">print</span>(<span class="pl-s"><span class="pl-pds">"</span>Evalutation of best performing model:<span class="pl-pds">"</span></span>)
+    <span class="pl-c1">print</span>(best_model.evaluate(<span class="pl-c1">X_test</span>, <span class="pl-c1">Y_test</span>))</pre></div>
+      </section>
+      <footer>
+        <p>Project maintained by <a href="https://github.com/maxpumperla">maxpumperla</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
