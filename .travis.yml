@@ -19,21 +19,17 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pandas pytest h5py flask
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pandas pytest h5py flask scikit-learn networkx
   - source activate test-environment
   - pip install pytest-cov python-coveralls
+  - pip install pymongo==2.7.2
+  - pip install hyperopt
   - pip install git+git://github.com/Theano/Theano.git
   - pip install keras
   - python setup.py install
 
-  # Install Spark
-  - wget http://apache.mirrors.tds.net/spark/spark-1.5.2/spark-1.5.2-bin-hadoop2.6.tgz -P $HOME
-  - tar zxvf $HOME/spark-* -C $HOME
-  - export SPARK_HOME=$HOME/spark-1.5.2-bin-hadoop2.6
-  - export PATH=$PATH:$SPARK_HOME/bin
-
 # Just run an example for now
 script:
-  - spark-submit --driver-memory 2G $PWD/examples/simple.py
+  - python $PWD/examples/simple.py
 after_success:
   - coveralls

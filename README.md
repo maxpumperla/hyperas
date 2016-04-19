@@ -1,4 +1,4 @@
-# Hyperas
+# Hyperas [![Build Status](https://travis-ci.org/maxpumperla/hyperas.svg?branch=master)](https://travis-ci.org/maxpumperla/hyperas)
 A very simple convenience wrapper around hyperopt for fast prototyping with keras models. Hyperas lets you use the power of hyperopt without having to learn the syntax of it. Instead, just define your keras model as you are used to, but use a simple template notation to define hyper-parameter ranges to tune.
 
 ## Installation
