@@ -42,17 +42,17 @@ def model(X_train, X_test, Y_train, Y_test):
     model.add(Activation('softmax'))
 
     rms = RMSprop()
-    model.compile(loss='categorical_crossentropy', optimizer=rms)
+    model.compile(loss='categorical_crossentropy', optimizer=rms, metrics=['accuracy'])
 
     nb_epoch = 10
     batch_size = 128
 
     model.fit(X_train, Y_train,
               batch_size=batch_size, nb_epoch=nb_epoch,
-              show_accuracy=True, verbose=2,
+              verbose=2,
               validation_data=(X_test, Y_test))
 
-    score, acc = model.evaluate(X_test, Y_test, show_accuracy=True, verbose=0)
+    score, acc = model.evaluate(X_test, Y_test, verbose=0)
 
     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
 

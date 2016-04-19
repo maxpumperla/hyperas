@@ -58,15 +58,16 @@ def model(X_train, Y_train, X_test, Y_test):
     model.add(Dense(10))
     model.add(Activation('softmax'))
 
-    model.compile(loss='categorical_crossentropy', optimizer={{choice(['rmsprop', 'adam', 'sgd'])}})
+    model.compile(loss='categorical_crossentropy',
+                  optimizer={{choice(['rmsprop', 'adam', 'sgd'])}},
+                  metrics=['accuracy'])
 
     model.fit(X_train, Y_train,
               batch_size={{choice([64, 128])}},
               nb_epoch=1,
-              show_accuracy=True,
               verbose=2,
               validation_data=(X_test, Y_test))
-    score, acc = model.evaluate(X_test, Y_test, show_accuracy=True, verbose=0)
+    score, acc = model.evaluate(X_test, Y_test, verbose=0)
     print('Test accuracy:', acc)
     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
 

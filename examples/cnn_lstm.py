@@ -58,13 +58,13 @@ def model(X_train, X_test, y_train, y_test, maxlen, max_features):
 
     model.compile(loss='binary_crossentropy',
                   optimizer='adam',
-                  class_mode='binary')
+                  metrics=['accuracy'])
 
     print('Train...')
     model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=nb_epoch,
-              validation_data=(X_test, y_test), show_accuracy=True)
-    score, acc = model.evaluate(X_test, y_test, batch_size=batch_size,
-                                show_accuracy=True)
+              validation_data=(X_test, y_test))
+    score, acc = model.evaluate(X_test, y_test, batch_size=batch_size)
+
     print('Test score:', score)
     print('Test accuracy:', acc)
     return {'loss': -acc, 'status': STATUS_OK, 'model': model}

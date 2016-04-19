@@ -42,22 +42,20 @@ def model(X_train, X_test, y_train, y_test, max_features, maxlen):
 
     model.compile(loss='binary_crossentropy',
                   optimizer='adam',
-                  class_mode="binary")
+                  metrics=['accuracy'])
 
     early_stopping = EarlyStopping(monitor='val_loss', patience=4)
     checkpointer = ModelCheckpoint(filepath='keras_weights.hdf5',
                                    verbose=1,
                                    save_best_only=True)
 
-    hist = model.fit(X_train, y_train,
-                     batch_size={{choice([32, 64, 128])}},
-                     # batch_size=128,
-                     nb_epoch=1,
-                     validation_split=0.08,
-                     show_accuracy=True,
-                     callbacks=[early_stopping, checkpointer])
+    model.fit(X_train, y_train,
+              batch_size={{choice([32, 64, 128])}},
+              nb_epoch=1,
+              validation_split=0.08,
+              callbacks=[early_stopping, checkpointer])
 
-    score, acc = model.evaluate(X_test, y_test, show_accuracy=True, verbose=0)
+    score, acc = model.evaluate(X_test, y_test, verbose=0)
 
     print('Test accuracy:', acc)
     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
