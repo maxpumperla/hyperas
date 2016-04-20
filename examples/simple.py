@@ -2,8 +2,6 @@ from __future__ import print_function
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas import optim
 from hyperas.distributions import choice, uniform
-from sklearn.metrics import accuracy_score
-from keras.utils import np_utils
 
 
 def data():
