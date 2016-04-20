@@ -1,14 +1,17 @@
 from __future__ import print_function
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas import optim
-from hyperas.distributions import choice, uniform
+from hyperas.distributions import uniform
+from keras.models import Sequential
+from keras.layers.core import Dense, Dropout, Activation, Flatten
+from keras.layers.convolutional import Convolution2D, MaxPooling2D
+from keras.optimizers import SGD
+from keras.preprocessing.image import ImageDataGenerator
+from keras.datasets import cifar10
+from keras.utils import np_utils
 
 
 def data():
-    from keras.preprocessing.image import ImageDataGenerator
-    from keras.datasets import cifar10
-    from keras.utils import np_utils
-
     nb_classes = 10
     # the data, shuffled and split between train and test sets
     (X_train, y_train), (X_test, y_test) = cifar10.load_data()
@@ -44,12 +47,8 @@ def data():
 
     return datagen, X_train, Y_train, X_test, Y_test
 
-def model(datagen, X_train, Y_train, X_test, Y_test):
-    from keras.models import Sequential
-    from keras.layers.core import Dense, Dropout, Activation, Flatten
-    from keras.layers.convolutional import Convolution2D, MaxPooling2D
-    from keras.optimizers import SGD
 
+def model(datagen, X_train, Y_train, X_test, Y_test):
     batch_size = 32
     nb_epoch = 200
 

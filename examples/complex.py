@@ -2,18 +2,19 @@ from __future__ import print_function
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas import optim
 from hyperas.distributions import choice, uniform, conditional
+from keras.models import Sequential
+from keras.layers.core import Dense, Dropout, Activation
+from keras.datasets import mnist
+from keras.utils import np_utils
 
 
 def data():
     '''
     Data providing function:
 
-    Make sure to have every relevant import statement included here and return data as
-    used in model function below. This function is separated from model() so that hyperopt
+    This function is separated from model() so that hyperopt
     won't reload data for each evaluation run.
     '''
-    from keras.datasets import mnist
-    from keras.utils import np_utils
     (X_train, y_train), (X_test, y_test) = mnist.load_data()
     X_train = X_train.reshape(60000, 784)
     X_test = X_test.reshape(10000, 784)
@@ -38,9 +39,6 @@ def model(X_train, Y_train, X_test, Y_test):
     The last one is optional, though recommended, namely:
         - model: specify the model just created so that we can later use it again.
     '''
-    from keras.models import Sequential
-    from keras.layers.core import Dense, Dropout, Activation
-
     model = Sequential()
     model.add(Dense(512, input_shape=(784,)))
     model.add(Activation('relu'))

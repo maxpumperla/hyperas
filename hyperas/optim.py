@@ -62,8 +62,11 @@ def get_hyperopt_model_string(model, data):
     lines = model_string.split("\n")
     lines = [line for line in lines if not line.strip().startswith('#')]
 
-    raw_imports = [line.strip() + "\n" for line in lines if "import" in line]
-    imports = ''.join(raw_imports)
+    calling_script_file = os.path.abspath(inspect.stack()[-1][1])
+    with open(calling_script_file, 'r') as f:
+        calling_lines = f.read().split('\n')
+        raw_imports = [line.strip() + "\n" for line in calling_lines if "import" in line]
+        imports = ''.join(raw_imports)
 
     model_string = [line + "\n" for line in lines if "import" not in line]
     model_string = ''.join(model_string)
@@ -179,9 +182,9 @@ def hyperopt_keras_model(model_string, parts, aug_parts):
 
 
 def temp_string(imports, model, data, space):
-    temp = ("from hyperopt import fmin, tpe, hp, STATUS_OK, Trials\n" +
+    temp = (imports + "from hyperopt import fmin, tpe, hp, STATUS_OK, Trials\n" +
             "from hyperas.distributions import conditional\n" +
-            imports + data + model + "\n" + space)
+            data + model + "\n" + space)
     return temp
 
 

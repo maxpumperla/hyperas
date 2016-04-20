@@ -2,12 +2,16 @@ from __future__ import print_function
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas import optim
 from hyperas.distributions import choice, uniform
+from keras.preprocessing import sequence
+from keras.datasets import imdb
+from keras.models import Sequential
+from keras.layers.core import Dense, Dropout, Activation
+from keras.layers.embeddings import Embedding
+from keras.layers.recurrent import LSTM
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 
 
 def data():
-    from keras.preprocessing import sequence
-    from keras.datasets import imdb
-
     maxlen = 100
     max_features = 20000
 
@@ -26,13 +30,6 @@ def data():
 
 
 def model(X_train, X_test, y_train, y_test, max_features, maxlen):
-    from keras.models import Sequential
-    from keras.layers.core import Dense, Dropout, Activation
-    from keras.layers.embeddings import Embedding
-    from keras.layers.recurrent import LSTM
-    from keras.callbacks import EarlyStopping, ModelCheckpoint
-
-    print('Build model...')
     model = Sequential()
     model.add(Embedding(max_features, 128, input_length=maxlen))
     model.add(LSTM(128))

@@ -4,14 +4,14 @@ from hyperas import optim
 from hyperas.distributions import choice, uniform
 from sklearn.metrics import accuracy_score
 from keras.utils import np_utils
+from keras.datasets import mnist
+from keras.models import Sequential
+from keras.layers.core import Dense, Dropout, Activation
+from keras.optimizers import RMSprop
 
 
 def data():
-    from keras.datasets import mnist
-    from keras.utils import np_utils
-
     nb_classes = 10
-
     (X_train, y_train), (X_test, y_test) = mnist.load_data()
 
     X_train = X_train.reshape(60000, 784)
@@ -26,11 +26,6 @@ def data():
 
 
 def model(X_train, X_test, Y_train, Y_test):
-
-    from keras.models import Sequential
-    from keras.layers.core import Dense, Dropout, Activation
-    from keras.optimizers import RMSprop
-
     model = Sequential()
     model.add(Dense(512, input_shape=(784,)))
     model.add(Activation('relu'))
