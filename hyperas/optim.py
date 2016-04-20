@@ -123,6 +123,9 @@ def get_hyperopt_space(parts, hyperopt_params):
 
 
 def retrieve_data_string(data):
+    '''
+    This assumes 4 spaces for indentation and won't work otherwise
+    '''
     data_string = inspect.getsource(data)
     first_line = data_string.split("\n")[0]
     data_string = data_string.replace(first_line, "")
@@ -130,7 +133,7 @@ def retrieve_data_string(data):
 
     split_data = data_string.split("\n")
     for i, line in enumerate(split_data):
-        split_data[i] = line.strip() + "\n"
+        split_data[i] = line[4:] + "\n"
     data_string = ''.join(split_data)
     print(">>> Data")
     print(data_string)
