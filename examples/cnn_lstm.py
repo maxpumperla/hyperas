@@ -1,7 +1,7 @@
 from __future__ import print_function
 from hyperopt import Trials, STATUS_OK, rand
 from hyperas import optim
-from hyperas.distributions import uniform
+from hyperas.distributions import uniform, choice
 import numpy as np
 from keras.preprocessing import sequence
 from keras.datasets import imdb
@@ -26,8 +26,6 @@ def data():
 
 def model(X_train, X_test, y_train, y_test, maxlen, max_features):
     embedding_size = 300
-    filter_length = 6
-    nb_filter = 64
     pool_length = 4
     lstm_output_size = 100
     batch_size = 200
@@ -36,8 +34,10 @@ def model(X_train, X_test, y_train, y_test, maxlen, max_features):
     model = Sequential()
     model.add(Embedding(max_features, embedding_size, input_length=maxlen))
     model.add(Dropout({{uniform(0, 1)}}))
-    model.add(Convolution1D(nb_filter=nb_filter,
-                            filter_length=filter_length,
+    # Note that we use unnamed parameters here, which is bad style, but is used here
+    # to demonstrate that it works. Always prefer named parameters.
+    model.add(Convolution1D({{choice([64, 128])}},
+                            {{choice([6, 8])}},
                             border_mode='valid',
                             activation='relu',
                             subsample_length=1))

@@ -144,7 +144,15 @@ def retrieve_data_string(data):
 
 
 def hyperparameter_names(model_string):
-    parts = re.findall(r"(\w+(?=\s*[\=\(]\s*\{\{[^}]+}\}))", model_string)
+    parts = []
+    params = re.findall(r"(\{\{[^}]+}\})", model_string)
+    for param in params:
+        name = re.findall(r"(\w+(?=\s*[\=\(]\s*" + re.escape(param) + r"))", model_string)
+        if len(name) > 0:
+            parts.append(name[0])
+        else:
+            parts.append(parts[-1])
+    # parts = re.findall(r"(\w+(?=\s*[\=\(]\s*\{\{[^}]+}\}))", model_string)
     print("PARTS:")
     for part in parts:
         print(part)
@@ -160,14 +168,14 @@ def hyperparameter_names(model_string):
 
 def get_hyperparameters(model_string):
     hyperopt_params = re.findall(r"(\{\{[^}]+}\})", model_string)
-    for (i, param) in enumerate(hyperopt_params):
+    for i, param in enumerate(hyperopt_params):
         hyperopt_params[i] = re.sub(r"[\{\}]", '', param)
     return hyperopt_params
 
 
 def augmented_names(parts):
     aug_parts = []
-    for (i, part) in enumerate(parts):
+    for i, part in enumerate(parts):
         aug_parts.append("space['" + part + "']")
     return aug_parts
 
