@@ -38,7 +38,7 @@ model.add(Activation('softmax'))
 After having trained the model, to optimize, we also have to define which evaluation metric of the model is important to us. For example, if we wish to optimize for accuracy, the following example does the trick:
 
 ```{python}
-score = model.evaluate(X_test, Y_test, show_accuracy=True, verbose=0)
+score = model.evaluate(X_test, Y_test, verbose=0)
 accuracy = score[1]
 return {'loss': -accuracy, 'status': STATUS_OK}
 ```
@@ -54,8 +54,7 @@ best_run = optim.minimize(model=model,
 In this example we use at most 10 evaluation runs and the TPE algorithm from hyperopt for optimization.
 
 ## Complete example
-**Note:** It is important to wrap your data and model into functions, including necessary imports, as shown below, and then pass them as parameters to the minimizer. ```data()``` returns the data the ```model()``` needs. Internally, this is a cheap, but necessary trick to avoid loading data on each optimization run.
-An extended version of the above example in one script reads as follows. This example shows many potential use cases of hyperas, including:
+**Note:** It is important to wrap your data and model into functions as shown below, and then pass them as parameters to the minimizer. ```data()``` returns the data the ```model()``` needs. An extended version of the above example in one script reads as follows. This example shows many potential use cases of hyperas, including:
 - Varying dropout probabilities, sampling from a uniform distribution
 - Different layer output sizes
 - Different optimization algorithms to use
@@ -69,17 +68,18 @@ from __future__ import print_function
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas import optim
 from hyperas.distributions import choice, uniform, conditional
+from keras.datasets import mnist
+from keras.utils import np_utils
+from keras.models import Sequential
+from keras.layers.core import Dense, Dropout, Activation
 
 def data():
     '''
     Data providing function:
 
-    Make sure to have every relevant import statement included here and return data as
-    used in model function below. This function is separated from model() so that hyperopt
+    This function is separated from model() so that hyperopt
     won't reload data for each evaluation run.
     '''
-    from keras.datasets import mnist
-    from keras.utils import np_utils
     (X_train, y_train), (X_test, y_test) = mnist.load_data()
     X_train = X_train.reshape(60000, 784)
     X_test = X_test.reshape(10000, 784)
@@ -104,9 +104,6 @@ def model(X_train, Y_train, X_test, Y_test):
     The last one is optional, though recommended, namely:
         - model: specify the model just created so that we can later use it again.
     '''
-    from keras.models import Sequential
-    from keras.layers.core import Dense, Dropout, Activation
-
     model = Sequential()
     model.add(Dense(512, input_shape=(784,)))
     model.add(Activation('relu'))
@@ -125,7 +122,8 @@ def model(X_train, Y_train, X_test, Y_test):
     model.add(Dense(10))
     model.add(Activation('softmax'))
 
-    model.compile(loss='categorical_crossentropy', optimizer={{choice(['rmsprop', 'adam', 'sgd'])}})
+    model.compile(loss='categorical_crossentropy', metrics=['accuracy'],
+                  optimizer={{choice(['rmsprop', 'adam', 'sgd'])}})
 
     model.fit(X_train, Y_train,
               batch_size={{choice([64, 128])}},
@@ -133,7 +131,7 @@ def model(X_train, Y_train, X_test, Y_test):
               show_accuracy=True,
               verbose=2,
               validation_data=(X_test, Y_test))
-    score, acc = model.evaluate(X_test, Y_test, show_accuracy=True, verbose=0)
+    score, acc = model.evaluate(X_test, Y_test, verbose=0)
     print('Test accuracy:', acc)
     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
 
