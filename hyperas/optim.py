@@ -1,3 +1,4 @@
+import numpy as np
 from hyperopt import fmin
 from .ensemble import VotingModel
 import os
@@ -103,12 +104,20 @@ def base_minimizer(model, data, algo, max_evals, trials, rseed=1337, full_model_
     except OSError:
         pass
 
-    best_run = fmin(keras_fmin_fnct,
-                    space=get_space(),
-                    algo=algo,
-                    max_evals=max_evals,
-                    trials=trials,
-                    rseed=rseed)
+    try:  # for backward compatibility.
+        best_run = fmin(keras_fmin_fnct,
+                        space=get_space(),
+                        algo=algo,
+                        max_evals=max_evals,
+                        trials=trials,
+                        rseed=rseed)
+    except TypeError:
+        best_run = fmin(keras_fmin_fnct,
+                        space=get_space(),
+                        algo=algo,
+                        max_evals=max_evals,
+                        trials=trials,
+                        rstate=np.random.RandomState(rseed))
 
     return best_run
 
