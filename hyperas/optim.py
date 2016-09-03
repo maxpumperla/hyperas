@@ -58,6 +58,17 @@ def best_models(nb_models, model, data, algo, max_evals, trials):
     return model_list
 
 
+# match a string that starts with the keyword `import`, with any indentation
+_starts_with_import = re.compile(r"^\s*\bimport\b")
+
+# match a string that uses the `from .* import .*` syntax, with any indentation
+_has_from_import = re.compile(r"^\s*\bfrom\b.*\bimport\b")
+
+def has_raw_import(line):
+    # Return whether a line in a source file is a valid import statement
+    return bool(_starts_with_import.match(line)) or bool(_has_from_import.match(line))
+
+
 def get_hyperopt_model_string(model, data):
     model_string = inspect.getsource(model)
     lines = model_string.split("\n")
@@ -66,7 +77,7 @@ def get_hyperopt_model_string(model, data):
     calling_script_file = os.path.abspath(inspect.stack()[-1][1])
     with open(calling_script_file, 'r') as f:
         calling_lines = f.read().split('\n')
-        raw_imports = [line.strip() + "\n" for line in calling_lines if "import" in line]
+        raw_imports = [line.strip() + "\n" for line in calling_lines if has_raw_import(line)]
         imports = ''.join(raw_imports)
 
     model_string = [line + "\n" for line in lines if "import" not in line]
