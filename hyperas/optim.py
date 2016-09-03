@@ -77,7 +77,11 @@ def get_hyperopt_model_string(model, data):
     calling_script_file = os.path.abspath(inspect.stack()[-1][1])
     with open(calling_script_file, 'r') as f:
         calling_lines = f.read().split('\n')
-        raw_imports = [line.strip() + "\n" for line in calling_lines if has_raw_import(line)]
+        raw_imports = [
+            "try:\n    %s\nexcept:\n    pass\n" % line.strip()
+            for line in calling_lines
+            if has_raw_import(line)
+        ]
         imports = ''.join(raw_imports)
 
     model_string = [line + "\n" for line in lines if "import" not in line]
