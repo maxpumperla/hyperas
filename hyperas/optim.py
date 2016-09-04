@@ -1,6 +1,7 @@
 import numpy as np
 from hyperopt import fmin
 from .ensemble import VotingModel
+import ast
 import os
 import inspect
 import re
@@ -58,15 +59,32 @@ def best_models(nb_models, model, data, algo, max_evals, trials):
     return model_list
 
 
-# match a string that starts with the keyword `import`, with any indentation
-_starts_with_import = re.compile(r"^\s*\bimport\b")
+class ImportParser(ast.NodeVisitor):
 
-# match a string that uses the `from .* import .*` syntax, with any indentation
-_has_from_import = re.compile(r"^\s*\bfrom\b.*\bimport\b")
+    def __init__(self):
+        self.imports = []
+        self.non_imports = []
 
-def has_raw_import(line):
-    # Return whether a line in a source file is a valid import statement
-    return bool(_starts_with_import.match(line)) or bool(_has_from_import.match(line))
+    def visit_Import(self, stmt):
+        import pdb; pdb.set_trace()
+        pass
+
+    def visit_ImportFrom(self, stmt):
+        import pdb; pdb.set_trace()
+        pass
+
+    def visit_TryExcept(self, stmt):
+        import pdb; pdb.set_trace()
+        super(ImportParser, self).generic_visit(self, stmt)
+
+
+def split_imports_and_source(source):
+    tree = ast.parse(source)
+    import_parser = ImportParser()
+    import_parser.visit(tree)
+    imports = "\n".join(import_parser.imports)
+    non_imports = "\n".join(import_parser.non_imports)
+    return (imports, non_imports)
 
 
 def get_hyperopt_model_string(model, data):
@@ -76,13 +94,8 @@ def get_hyperopt_model_string(model, data):
 
     calling_script_file = os.path.abspath(inspect.stack()[-1][1])
     with open(calling_script_file, 'r') as f:
-        calling_lines = f.read().split('\n')
-        raw_imports = [
-            "try:\n    %s\nexcept:\n    pass\n" % line.strip()
-            for line in calling_lines
-            if has_raw_import(line)
-        ]
-        imports = ''.join(raw_imports)
+        source = f.read()
+        imports, _ = find_imports(source)
 
     model_string = [line + "\n" for line in lines if "import" not in line]
     model_string = ''.join(model_string)
