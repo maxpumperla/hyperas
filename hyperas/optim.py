@@ -69,6 +69,20 @@ def has_raw_import(line):
     return bool(_starts_with_import.match(line)) or bool(_has_from_import.match(line))
 
 
+def extract_and_format_imports(lines):
+    imports = []
+    for line in lines:
+        if has_raw_import(line):
+            if "print_function" in line:
+                # Importing the print_function must be the first line in the the file.
+                # We cannot wrap it in a try/except.
+                imports.append(line.strip() + "\n")
+            else:
+                # Wrap all other imports in try/except, as some python source files do.
+                imports.append("try:\n    %s\nexcept:\n    pass\n" % line.strip())
+    return "".join(imports)
+
+
 def get_hyperopt_model_string(model, data):
     model_string = inspect.getsource(model)
     lines = model_string.split("\n")
@@ -77,14 +91,9 @@ def get_hyperopt_model_string(model, data):
     calling_script_file = os.path.abspath(inspect.stack()[-1][1])
     with open(calling_script_file, 'r') as f:
         calling_lines = f.read().split('\n')
-        raw_imports = [
-            "try:\n    %s\nexcept:\n    pass\n" % line.strip()
-            for line in calling_lines
-            if has_raw_import(line)
-        ]
-        imports = ''.join(raw_imports)
+        imports = extract_and_format_imports(lines)
 
-    model_string = [line + "\n" for line in lines if "import" not in line]
+    model_string = [line + "\n" for line in lines if not has_raw_import(line)]
     model_string = ''.join(model_string)
 
     parts = hyperparameter_names(model_string)
