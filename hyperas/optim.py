@@ -62,29 +62,30 @@ def best_models(nb_models, model, data, algo, max_evals, trials):
 class ImportParser(ast.NodeVisitor):
 
     def __init__(self):
-        self.imports = []
-        self.non_imports = []
+        self.lines = []
 
-    def visit_Import(self, stmt):
-        import pdb; pdb.set_trace()
-        pass
+    def visit_Import(self, node):
+        line = 'import {}'.format(', '.join(node.names))
+        self.lines.append(line)
 
     def visit_ImportFrom(self, stmt):
-        import pdb; pdb.set_trace()
-        pass
+        line = 'from {}{} import {}'.format(
+            node.level * '.',
+            node.module or '',
+            ', '.join(node.names))
+        self.lines.append(line)
 
     def visit_TryExcept(self, stmt):
         import pdb; pdb.set_trace()
         super(ImportParser, self).generic_visit(self, stmt)
 
 
-def split_imports_and_source(source):
+def extract_imports(source):
     tree = ast.parse(source)
     import_parser = ImportParser()
     import_parser.visit(tree)
-    imports = "\n".join(import_parser.imports)
-    non_imports = "\n".join(import_parser.non_imports)
-    return (imports, non_imports)
+    imports_str = '\n'.join(import_parser.lines)
+    return imports_str
 
 
 def get_hyperopt_model_string(model, data):
@@ -95,7 +96,7 @@ def get_hyperopt_model_string(model, data):
     calling_script_file = os.path.abspath(inspect.stack()[-1][1])
     with open(calling_script_file, 'r') as f:
         source = f.read()
-        imports, _ = find_imports(source)
+        imports = extract_imports(source)
 
     model_string = [line + "\n" for line in lines if "import" not in line]
     model_string = ''.join(model_string)
