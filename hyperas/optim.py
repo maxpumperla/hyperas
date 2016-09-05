@@ -1,8 +1,10 @@
 import numpy as np
 from hyperopt import fmin
 from .ensemble import VotingModel
-import os
+import ast
 import inspect
+from operator import attrgetter
+import os
 import re
 import sys
 sys.path.append(".")
@@ -58,15 +60,51 @@ def best_models(nb_models, model, data, algo, max_evals, trials):
     return model_list
 
 
-# match a string that starts with the keyword `import`, with any indentation
-_starts_with_import = re.compile(r"^\s*\bimport\b")
+class ImportParser(ast.NodeVisitor):
 
-# match a string that uses the `from .* import .*` syntax, with any indentation
-_has_from_import = re.compile(r"^\s*\bfrom\b.*\bimport\b")
+    def __init__(self):
+        self.lines = []
+        self.line_numbers = []
 
-def has_raw_import(line):
-    # Return whether a line in a source file is a valid import statement
-    return bool(_starts_with_import.match(line)) or bool(_has_from_import.match(line))
+    def visit_Import(self, node):
+        line = 'import {}'.format(self._import_names(node.names))
+        self.line_numbers.append(node.lineno)
+        self.lines.append(line)
+
+    def visit_ImportFrom(self, node):
+        line = 'from {}{} import {}'.format(
+            node.level * '.',
+            node.module or '',
+            self._import_names(node.names))
+        self.line_numbers.append(node.lineno)
+        self.lines.append(line)
+
+    def _import_names(self, names):
+        return ', '.join(map(attrgetter('name'), names))
+
+
+def extract_imports(source):
+    tree = ast.parse(source)
+    import_parser = ImportParser()
+    import_parser.visit(tree)
+    import_lines = []
+    for line in import_parser.lines:
+        if 'print_function' in line:
+            import_lines.append(line + '\n')
+        else:
+            import_lines.append('try:\n    {}\nexcept:\n    pass\n'.format(line))
+    imports_str = '\n'.join(import_lines)
+    return imports_str
+
+
+def remove_imports(source):
+    tree = ast.parse(source)
+    import_parser = ImportParser()
+    import_parser.visit(tree)
+    lines = [line for line in source.split('\n') if not line.strip().startswith('#')]
+    lines_to_remove = set(import_parser.line_numbers)
+    non_import_lines = [line for i, line in enumerate(lines, start=1) if i not in lines_to_remove]
+    return '\n'.join(non_import_lines)
 
 
 def extract_and_format_imports(lines):
@@ -85,16 +123,12 @@ def extract_and_format_imports(lines):
 
 def get_hyperopt_model_string(model, data):
     model_string = inspect.getsource(model)
-    lines = model_string.split("\n")
-    lines = [line for line in lines if not line.strip().startswith('#')]
+    model_string = remove_imports(model_string)
 
     calling_script_file = os.path.abspath(inspect.stack()[-1][1])
     with open(calling_script_file, 'r') as f:
-        calling_lines = f.read().split('\n')
-        imports = extract_and_format_imports(lines)
-
-    model_string = [line + "\n" for line in lines if not has_raw_import(line)]
-    model_string = ''.join(model_string)
+        source = f.read()
+        imports = extract_imports(source)
 
     parts = hyperparameter_names(model_string)
     aug_parts = augmented_names(parts)
