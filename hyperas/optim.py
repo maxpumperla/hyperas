@@ -107,20 +107,6 @@ def remove_imports(source):
     return '\n'.join(non_import_lines)
 
 
-def extract_and_format_imports(lines):
-    imports = []
-    for line in lines:
-        if has_raw_import(line):
-            if "print_function" in line:
-                # Importing the print_function must be the first line in the the file.
-                # We cannot wrap it in a try/except.
-                imports.append(line.strip() + "\n")
-            else:
-                # Wrap all other imports in try/except, as some python source files do.
-                imports.append("try:\n    %s\nexcept:\n    pass\n" % line.strip())
-    return "".join(imports)
-
-
 def get_hyperopt_model_string(model, data):
     model_string = inspect.getsource(model)
     model_string = remove_imports(model_string)
