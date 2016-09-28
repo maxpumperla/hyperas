@@ -1,4 +1,3 @@
-import numpy as np
 from hyperopt import fmin
 from .ensemble import VotingModel
 import os
@@ -8,7 +7,7 @@ import sys
 sys.path.append(".")
 
 
-def minimize(model, data, algo, max_evals, trials, rseed=1337):
+def minimize(model, data, algo, max_evals, trials, rseed=1337, extra=None):
     """Minimize a keras model for given data and implicit hyperparameters.
 
     Parameters
@@ -29,7 +28,7 @@ def minimize(model, data, algo, max_evals, trials, rseed=1337):
     A pair consisting of the results dictionary of the best run and the corresponing
     keras model.
     """
-    best_run = base_minimizer(model, data, algo, max_evals, trials, rseed)
+    best_run = base_minimizer(model, data, algo, max_evals, trials, rseed, extra=extra)
 
     best_model = None
     for trial in trials:
@@ -57,8 +56,18 @@ def best_models(nb_models, model, data, algo, max_evals, trials):
     model_list = [trial.get('result').get('model') for trial in trials if trial.get('result').get('loss') >= cut_off]
     return model_list
 
+def get_extras_string(extras=None, indent=4):
+    out = []
+    if type(extras) is dict:
+        for k, v in extras.items():
+            if type(v) is str:
+                template = "{} = '{}'\n"
+            else:
+                template = "{} = {}\n"
+            out.append((" "*indent)+(template.format(k, v)))
+    return ''.join(out)
 
-def get_hyperopt_model_string(model, data):
+def get_hyperopt_model_string(model, data, extra=None):
     model_string = inspect.getsource(model)
     lines = model_string.split("\n")
     lines = [line for line in lines if not line.strip().startswith('#')]
@@ -68,8 +77,9 @@ def get_hyperopt_model_string(model, data):
         calling_lines = f.read().split('\n')
         raw_imports = [line.strip() + "\n" for line in calling_lines if "import" in line]
         imports = ''.join(raw_imports)
-
     model_string = [line + "\n" for line in lines if "import" not in line]
+
+    model_string.insert(1, get_extras_string(extra) )
     model_string = ''.join(model_string)
 
     parts = hyperparameter_names(model_string)
@@ -78,19 +88,19 @@ def get_hyperopt_model_string(model, data):
     hyperopt_params = get_hyperparameters(model_string)
     space = get_hyperopt_space(parts, hyperopt_params)
 
-    data_string = retrieve_data_string(data)
+    data_string = retrieve_data_string(data, extra)
     model = hyperopt_keras_model(model_string, parts, aug_parts)
 
     temp_str = temp_string(imports, model, data_string, space)
     return temp_str
 
 
-def base_minimizer(model, data, algo, max_evals, trials, rseed=1337, full_model_string=None):
+def base_minimizer(model, data, algo, max_evals, trials, rseed=1337, full_model_string=None, extra=None):
 
     if full_model_string is not None:
         model_str = full_model_string
     else:
-        model_str = get_hyperopt_model_string(model, data)
+        model_str = get_hyperopt_model_string(model, data, extra)
     write_temp_files(model_str)
 
     try:
@@ -104,20 +114,12 @@ def base_minimizer(model, data, algo, max_evals, trials, rseed=1337, full_model_
     except OSError:
         pass
 
-    try:  # for backward compatibility.
-        best_run = fmin(keras_fmin_fnct,
-                        space=get_space(),
-                        algo=algo,
-                        max_evals=max_evals,
-                        trials=trials,
-                        rseed=rseed)
-    except TypeError:
-        best_run = fmin(keras_fmin_fnct,
-                        space=get_space(),
-                        algo=algo,
-                        max_evals=max_evals,
-                        trials=trials,
-                        rstate=np.random.RandomState(rseed))
+    best_run = fmin(keras_fmin_fnct,
+                    space=get_space(),
+                    algo=algo,
+                    max_evals=max_evals,
+                    trials=trials,
+                    rseed=rseed)
 
     return best_run
 
@@ -134,7 +136,7 @@ def get_hyperopt_space(parts, hyperopt_params):
     return space
 
 
-def retrieve_data_string(data):
+def retrieve_data_string(data, extra=None):
     '''
     This assumes 4 spaces for indentation and won't work otherwise
     '''
@@ -146,7 +148,11 @@ def retrieve_data_string(data):
     split_data = data_string.split("\n")
     for i, line in enumerate(split_data):
         split_data[i] = line[4:] + "\n"
+    if extra is not None and 'FPATH' in extra:
+        split_data.insert(0, "FPATH = '{}'".format(extra['FPATH']))
     data_string = ''.join(split_data)
+   
+        
     print(">>> Data")
     print(data_string)
     return data_string
@@ -193,8 +199,8 @@ def hyperopt_keras_model(model_string, parts, aug_parts):
     first_line = model_string.split("\n")[0]
     model_string = model_string.replace(first_line, "def keras_fmin_fnct(space):\n")
     result = re.sub(r"(\{\{[^}]+}\})", lambda match: aug_parts.pop(0), model_string, count=len(parts))
-    print('>>> Resulting replaced keras model:\n')
-    print(result)
+    # print('>>> Resulting replaced keras model:\n')
+    # print(result)
     return result
 
 
@@ -210,3 +216,4 @@ def write_temp_files(tmp_str, path='./temp_model.py'):
         f.write(tmp_str)
         f.close()
     return
+
