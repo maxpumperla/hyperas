@@ -59,12 +59,8 @@ def best_models(nb_models, model, data, algo, max_evals, trials):
 def get_extras_string(extras=None, indent=4):
     out = []
     if type(extras) is dict:
-        for k, v in extras.items():
-            if type(v) is str:
-                template = "{} = '{}'\n"
-            else:
-                template = "{} = {}\n"
-            out.append((" "*indent)+(template.format(k, v)))
+        for k, v in extras.items(): 
+            out.append((" "*indent)+("{} = {!r}\n".format(k, v)))
     return ''.join(out)
 
 def get_hyperopt_model_string(model, data, extra=None):
