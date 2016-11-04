@@ -31,16 +31,16 @@ class VotingModel(object):
                        .format(len(weights), len(model_list)))
 
     def predict(self, X, batch_size=128, verbose=0):
-        predictions = map(lambda model: model.predict(X, batch_size, verbose), self.model_list)
+        predictions = list(map(lambda model: model.predict(X, batch_size, verbose), self.model_list))
         nb_preds = len(X)
-        nb_classes = predictions[0].shape[1]
+        nb_classes = len(predictions[0])
 
         if self.voting == 'hard':
             for i, pred in enumerate(predictions):
-                pred = map(lambda probas: np.argmax(probas, axis=-1), pred)
+                pred = list(map(lambda probas: np.argmax(probas, axis=-1), pred))
                 predictions[i] = np.asarray(pred).reshape(nb_preds, 1)
             argmax_list = list(np.concatenate(predictions, axis=1))
-            votes = np.asarray(map(lambda arr: max(set(arr)), argmax_list))
+            votes = np.asarray(list(map(lambda arr: max(set(arr)), argmax_list)))
         if self.voting == 'soft':
             for i, pred in enumerate(predictions):
                 pred = map(lambda probas: probas * self.weights[i], pred)
