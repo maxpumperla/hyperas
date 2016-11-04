@@ -42,10 +42,10 @@ def minimize(model, data, algo, max_evals, trials, rseed=1337):
     return best_run, best_model
 
 
-def best_ensemble(nb_ensemble_models, model, data, algo, max_evals, trials, voting='hard', weights=None):
+def best_ensemble(nb_ensemble_models, model, data, algo, max_evals, trials, voting='hard', weights=None, nb_classes=None):
     model_list = best_models(nb_models=nb_ensemble_models, model=model,
                              data=data, algo=algo, max_evals=max_evals, trials=trials)
-    return VotingModel(model_list, voting, weights)
+    return VotingModel(model_list, voting, weights, nb_classes)
 
 
 def best_models(nb_models, model, data, algo, max_evals, trials):
