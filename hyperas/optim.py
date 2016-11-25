@@ -7,6 +7,8 @@ from operator import attrgetter
 import os
 import re
 import sys
+import warnings
+
 sys.path.append(".")
 
 
@@ -179,17 +181,15 @@ def get_hyperopt_space(parts, hyperopt_params):
 
 
 def retrieve_data_string(data):
-    '''
-    This assumes 4 spaces for indentation and won't work otherwise
-    '''
     data_string = inspect.getsource(data)
     first_line = data_string.split("\n")[0]
+    indent_length = len(determine_indent(data_string))
     data_string = data_string.replace(first_line, "")
     data_string = re.sub(r"return.*", "", data_string)
 
     split_data = data_string.split("\n")
     for i, line in enumerate(split_data):
-        split_data[i] = line[4:] + "\n"
+        split_data[i] = line[indent_length:] + "\n"
     data_string = ''.join(split_data)
     print(">>> Data")
     print(data_string)
@@ -254,3 +254,39 @@ def write_temp_files(tmp_str, path='./temp_model.py'):
         f.write(tmp_str)
         f.close()
     return
+
+def determine_indent(str):
+   """
+   Figure out the character(s) used for indents in a given source code fragement.
+
+   Parameters
+   ----------
+   str : string
+      source code starting at an indent of 0 and containing at least one indented block.
+
+   Returns
+   -------
+   string
+      The character(s) used for indenting.
+
+   Example
+   -------
+   code = "def do_stuff(x)\n   print(x)\n"
+   indent = determine_indent(str)
+   print("The code '", code, "' is indented with \n'", indent, "' (size: ", len(indent), ")")
+   """
+   indent = None
+   reg = r"""
+      ^(?P<previous_indent>\s*)\S.+?:\n      # line starting a block, i. e. '   for i in x:\n'
+      ((\s*)\n)*                             # empty lines
+      (?P=previous_indent)(?P<indent>\s+)\S  # first indented line of the new block, i. e. '      d'(..oStuff())
+      """
+
+   matches = re.compile(reg,re.MULTILINE|re.VERBOSE).finditer(str)
+   for block_start in matches:
+      new_indent = block_start.groupdict()['indent']
+      if indent and new_indent != indent:
+         warnings.warn('Inconsistent indentation detected.'
+                       'Found "%s" (length: %i) as well as "%s" (length: %i)' % (indent, len(indent), new_indent, len(new_indent)))
+      indent = new_indent
+   return indent
