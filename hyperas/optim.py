@@ -57,7 +57,7 @@ def best_models(nb_models, model, data, algo, max_evals, trials):
     if len(trials) < nb_models:
         nb_models = len(trials)
     scores = [trial.get('result').get('loss') for trial in trials]
-    cut_off = sorted(scores, reverse=True)[nb_models-1]
+    cut_off = sorted(scores, reverse=True)[nb_models - 1]
     model_list = [trial.get('result').get('model') for trial in trials if trial.get('result').get('loss') >= cut_off]
     return model_list
 
@@ -93,6 +93,8 @@ def extract_imports(source):
     for line in import_parser.lines:
         if 'print_function' in line:
             import_lines.append(line + '\n')
+        elif '_pydev_' in line:
+            continue
         else:
             import_lines.append('try:\n    {}\nexcept:\n    pass\n'.format(line))
     imports_str = '\n'.join(import_lines)
@@ -109,6 +111,12 @@ def remove_imports(source):
     return '\n'.join(non_import_lines)
 
 
+def remove_all_comments(source):
+    string = re.sub(re.compile("'''.*?'''", re.DOTALL), "", source)  # remove '''...''' comments
+    string = re.sub(re.compile("#.*?\n"), "", string)  # remove #...\n comments
+    return string
+
+
 def get_hyperopt_model_string(model, data):
     model_string = inspect.getsource(model)
     model_string = remove_imports(model_string)
@@ -116,7 +124,8 @@ def get_hyperopt_model_string(model, data):
     calling_script_file = os.path.abspath(inspect.stack()[-1][1])
     with open(calling_script_file, 'r') as f:
         source = f.read()
-        imports = extract_imports(source)
+        cleaned_source = remove_all_comments(source)
+        imports = extract_imports(cleaned_source)
 
     parts = hyperparameter_names(model_string)
     aug_parts = augmented_names(parts)
@@ -205,10 +214,6 @@ def hyperparameter_names(model_string):
             parts.append(name[0])
         else:
             parts.append(parts[-1])
-    # parts = re.findall(r"(\w+(?=\s*[\=\(]\s*\{\{[^}]+}\}))", model_string)
-    print("PARTS:")
-    for part in parts:
-        print(part)
     part_dict = {}
     for i, part in enumerate(parts):
         if part in part_dict.keys():
@@ -255,38 +260,39 @@ def write_temp_files(tmp_str, path='./temp_model.py'):
         f.close()
     return
 
-def determine_indent(str):
-   """
-   Figure out the character(s) used for indents in a given source code fragement.
 
-   Parameters
-   ----------
-   str : string
+def determine_indent(str):
+    """
+    Figure out the character(s) used for indents in a given source code fragement.
+
+    Parameters
+    ----------
+    str : string
       source code starting at an indent of 0 and containing at least one indented block.
 
-   Returns
-   -------
-   string
+    Returns
+    -------
+    string
       The character(s) used for indenting.
 
-   Example
-   -------
-   code = "def do_stuff(x)\n   print(x)\n"
-   indent = determine_indent(str)
-   print("The code '", code, "' is indented with \n'", indent, "' (size: ", len(indent), ")")
-   """
-   indent = None
-   reg = r"""
+    Example
+    -------
+    code = "def do_stuff(x)\n   print(x)\n"
+    indent = determine_indent(str)
+    print("The code '", code, "' is indented with \n'", indent, "' (size: ", len(indent), ")")
+    """
+    indent = None
+    reg = r"""
       ^(?P<previous_indent>\s*)\S.+?:\n      # line starting a block, i. e. '   for i in x:\n'
       ((\s*)\n)*                             # empty lines
       (?P=previous_indent)(?P<indent>\s+)\S  # first indented line of the new block, i. e. '      d'(..oStuff())
       """
 
-   matches = re.compile(reg,re.MULTILINE|re.VERBOSE).finditer(str)
-   for block_start in matches:
-      new_indent = block_start.groupdict()['indent']
-      if indent and new_indent != indent:
-         warnings.warn('Inconsistent indentation detected.'
-                       'Found "%s" (length: %i) as well as "%s" (length: %i)' % (indent, len(indent), new_indent, len(new_indent)))
-      indent = new_indent
-   return indent
+    matches = re.compile(reg, re.MULTILINE | re.VERBOSE).finditer(str)
+    for block_start in matches:
+        new_indent = block_start.groupdict()['indent']
+        if indent and new_indent != indent:
+            warnings.warn('Inconsistent indentation detected.'
+                          'Found "%s" (length: %i) as well as "%s" (length: %i)' % (indent, len(indent), new_indent, len(new_indent)))
+        indent = new_indent
+    return indent
