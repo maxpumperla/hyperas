@@ -201,7 +201,7 @@ def retrieve_data_string(data):
         split_data[i] = line[indent_length:] + "\n"
     data_string = ''.join(split_data)
     print(">>> Data")
-    print(data_string)
+    print(with_line_numbers(data_string))
     return data_string
 
 
@@ -243,7 +243,7 @@ def hyperopt_keras_model(model_string, parts, aug_parts):
     model_string = model_string.replace(first_line, "def keras_fmin_fnct(space):\n")
     result = re.sub(r"(\{\{[^}]+}\})", lambda match: aug_parts.pop(0), model_string, count=len(parts))
     print('>>> Resulting replaced keras model:\n')
-    print(result)
+    print(with_line_numbers(result))
     return result
 
 
@@ -259,6 +259,34 @@ def write_temp_files(tmp_str, path='./temp_model.py'):
         f.write(tmp_str)
         f.close()
     return
+
+
+def with_line_numbers(code):
+    """
+    Adds line numbers to each line of a source code fragment
+
+    Parameters
+    ----------
+    str : string
+       any multiline text, such as as (fragments) of source code
+
+    Returns
+    -------
+    str : string
+       The input with added <n>: for each line
+
+    Example
+    -------
+    code = "def do_stuff(x)\n\n    print(x)\n"
+    with_line_numbers(code)
+
+    1: def do_stuff(x):
+    2:     print(x)
+    3:
+    """
+    max_number_length = str(len(str(len(code))))
+    format_str = "{:>" + max_number_length + "d}: {:}"
+    return "\n".join([format_str.format(line_number + 1, line) for line_number, line in enumerate(code.split("\n"))])
 
 
 def determine_indent(str):
