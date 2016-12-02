@@ -8,11 +8,13 @@ import os
 import re
 import sys
 import warnings
+import nbformat
+from nbconvert import PythonExporter
 
 sys.path.append(".")
 
 
-def minimize(model, data, algo, max_evals, trials, rseed=1337):
+def minimize(model, data, algo, max_evals, trials, rseed=1337, notebook_name=None):
     """Minimize a keras model for given data and implicit hyperparameters.
 
     Parameters
@@ -27,13 +29,16 @@ def minimize(model, data, algo, max_evals, trials, rseed=1337):
     trials: A hyperopt trials object, used to store intermediate results for all
         optimization runs
     rseed: Integer random seed for experiments
+    notebook_name: If running from an ipython notebook, provide filename (not path)
 
     Returns
     -------
     A pair consisting of the results dictionary of the best run and the corresponing
     keras model.
     """
-    best_run = base_minimizer(model, data, algo, max_evals, trials, rseed)
+    best_run = base_minimizer(model=model, data=data, algo=algo, max_evals=max_evals,
+                              trials=trials, rseed=rseed, full_model_string=None,
+                              notebook_name=notebook_name)
 
     best_model = None
     for trial in trials:
@@ -46,14 +51,17 @@ def minimize(model, data, algo, max_evals, trials, rseed=1337):
     return best_run, best_model
 
 
-def best_ensemble(nb_ensemble_models, model, data, algo, max_evals, trials, voting='hard', weights=None, nb_classes=None):
+def best_ensemble(nb_ensemble_models, model, data, algo, max_evals,
+                  trials, voting='hard', weights=None, nb_classes=None):
     model_list = best_models(nb_models=nb_ensemble_models, model=model,
                              data=data, algo=algo, max_evals=max_evals, trials=trials)
     return VotingModel(model_list, voting, weights, nb_classes)
 
 
 def best_models(nb_models, model, data, algo, max_evals, trials):
-    base_minimizer(model, data, algo, max_evals, trials)
+    base_minimizer(model=model, data=data, algo=algo, max_evals=max_evals,
+                   trials=trials, rseed=None, full_model_string=None,
+                   notebook_name=None)
     if len(trials) < nb_models:
         nb_models = len(trials)
     scores = [trial.get('result').get('loss') for trial in trials]
@@ -99,6 +107,8 @@ def extract_imports(source):
         else:
             import_lines.append('try:\n    {}\nexcept:\n    pass\n'.format(line))
     imports_str = '\n'.join(import_lines)
+    print('>>> Imports:')
+    print(imports_str)
     return imports_str
 
 
@@ -118,15 +128,23 @@ def remove_all_comments(source):
     return string
 
 
-def get_hyperopt_model_string(model, data):
+def get_hyperopt_model_string(model, data, notebook_name):
     model_string = inspect.getsource(model)
     model_string = remove_imports(model_string)
 
-    calling_script_file = os.path.abspath(inspect.stack()[-1][1])
-    with open(calling_script_file, 'r') as f:
-        source = f.read()
-        cleaned_source = remove_all_comments(source)
-        imports = extract_imports(cleaned_source)
+    if notebook_name:
+        notebook_path = os.getcwd() + "/{}.ipynb".format(notebook_name)
+        with open(notebook_path, 'r') as f:
+            notebook = nbformat.reads(f.read(), nbformat.NO_CONVERT)
+            exporter = PythonExporter()
+            source, _ = exporter.from_notebook_node(notebook)
+    else:
+        calling_script_file = os.path.abspath(inspect.stack()[-1][1])
+        with open(calling_script_file, 'r') as f:
+            source = f.read()
+
+    cleaned_source = remove_all_comments(source)
+    imports = extract_imports(cleaned_source)
 
     parts = hyperparameter_names(model_string)
     aug_parts = augmented_names(parts)
@@ -141,12 +159,13 @@ def get_hyperopt_model_string(model, data):
     return temp_str
 
 
-def base_minimizer(model, data, algo, max_evals, trials, rseed=1337, full_model_string=None):
+def base_minimizer(model, data, algo, max_evals, trials, rseed=1337,
+                   full_model_string=None, notebook_name=None):
 
     if full_model_string is not None:
         model_str = full_model_string
     else:
-        model_str = get_hyperopt_model_string(model, data)
+        model_str = get_hyperopt_model_string(model, data, notebook_name)
     write_temp_files(model_str)
 
     try:
