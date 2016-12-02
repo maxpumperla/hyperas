@@ -9,6 +9,7 @@ matrix:
 install:
   - pip install --upgrade pip
   - pip install keras hyperopt $TF_BINARY_URL
+  - pip install entrypoints
   - python setup.py install
 # Just run an example for now
 script:
