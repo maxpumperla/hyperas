@@ -4,7 +4,8 @@ from keras.models import model_from_yaml
 
 class VotingModel(object):
 
-    def __init__(self, model_list, voting='hard', weights=None, nb_classes=None):
+    def __init__(self, model_list, voting='hard',
+                 weights=None, nb_classes=None):
         """(Weighted) majority vote model for a given list of Keras models.
 
         Parameters
@@ -38,10 +39,14 @@ class VotingModel(object):
 
         if self.voting == 'hard':
             for i, pred in enumerate(predictions):
-                pred = list(map(lambda probas: np.argmax(probas, axis=-1), pred))
+                pred = list(map(
+                    lambda probas: np.argmax(probas, axis=-1), pred
+                ))
                 predictions[i] = np.asarray(pred).reshape(nb_preds, 1)
             argmax_list = list(np.concatenate(predictions, axis=1))
-            votes = np.asarray(list(map(lambda arr: max(set(arr)), argmax_list)))
+            votes = np.asarray(list(
+                map(lambda arr: max(set(arr)), argmax_list)
+            ))
         if self.voting == 'soft':
             for i, pred in enumerate(predictions):
                 pred = list(map(lambda probas: probas * self.weights[i], pred))
