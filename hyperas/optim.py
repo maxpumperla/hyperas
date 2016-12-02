@@ -93,7 +93,8 @@ def extract_imports(source):
     for line in import_parser.lines:
         if 'print_function' in line:
             import_lines.append(line + '\n')
-        elif '_pydev_' in line:
+        # skip imports for pycharm and eclipse
+        elif '_pydev_' in line or 'java.lang' in line:
             continue
         else:
             import_lines.append('try:\n    {}\nexcept:\n    pass\n'.format(line))
