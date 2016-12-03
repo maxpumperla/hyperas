@@ -53,13 +53,14 @@ def minimize(model, data, algo, max_evals, trials, rseed=1337, notebook_name=Non
 
 
 def base_minimizer(model, data, algo, max_evals, trials, rseed=1337,
-                   full_model_string=None, notebook_name=None, verbose=True):
+                   full_model_string=None, notebook_name=None,
+                   verbose=True, stack=3):
 
     # TODO: use verbose flag for printing
     if full_model_string is not None:
         model_str = full_model_string
     else:
-        model_str = get_hyperopt_model_string(model, data, notebook_name, verbose)
+        model_str = get_hyperopt_model_string(model, data, notebook_name, verbose, stack)
     write_temp_files(model_str)
 
     try:
@@ -100,8 +101,7 @@ def best_ensemble(nb_ensemble_models, model, data, algo, max_evals,
 
 def best_models(nb_models, model, data, algo, max_evals, trials):
     base_minimizer(model=model, data=data, algo=algo, max_evals=max_evals,
-                   trials=trials, rseed=None, full_model_string=None,
-                   notebook_name=None)
+                   trials=trials, stack=4)
     if len(trials) < nb_models:
         nb_models = len(trials)
     scores = [trial.get('result').get('loss') for trial in trials]
@@ -110,7 +110,7 @@ def best_models(nb_models, model, data, algo, max_evals, trials):
     return model_list
 
 
-def get_hyperopt_model_string(model, data, notebook_name, verbose):
+def get_hyperopt_model_string(model, data, notebook_name, verbose, stack):
     model_string = inspect.getsource(model)
     model_string = remove_imports(model_string)
 
@@ -122,7 +122,9 @@ def get_hyperopt_model_string(model, data, notebook_name, verbose):
             source, _ = exporter.from_notebook_node(notebook)
     else:
         # third item in inspect stack is the calling script
-        calling_script_file = os.path.abspath(inspect.stack()[3][1])
+        for i in inspect.stack():
+            print(i[1])
+        calling_script_file = os.path.abspath(inspect.stack()[stack][1])
         with open(calling_script_file, 'r') as f:
             source = f.read()
 
