@@ -93,7 +93,7 @@ def with_line_numbers(code):
 
     Example
     -------
-    code = "def do_stuff(x)\n\n    print(x)\n"
+    code = "def do_stuff(x):\n\tprint(x)\n"
     with_line_numbers(code)
 
     1: def do_stuff(x):

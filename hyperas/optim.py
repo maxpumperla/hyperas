@@ -56,12 +56,12 @@ def base_minimizer(model, data, algo, max_evals, trials, rseed=1337,
                    full_model_string=None, notebook_name=None,
                    verbose=True, stack=3):
 
-    # TODO: use verbose flag for printing
     if full_model_string is not None:
         model_str = full_model_string
     else:
         model_str = get_hyperopt_model_string(model, data, notebook_name, verbose, stack)
-    write_temp_files(model_str)
+    temp_file = './temp_model.py'
+    write_temp_files(model_str, temp_file)
 
     try:
         from temp_model import keras_fmin_fnct, get_space
@@ -69,8 +69,8 @@ def base_minimizer(model, data, algo, max_evals, trials, rseed=1337,
         print("Unexpected error: {}".format(sys.exc_info()[0]))
         raise
     try:
-        os.remove('./temp_model.py')
-        os.remove('./temp_model.pyc')
+        os.remove(temp_file)
+        os.remove(temp_file + 'c')
     except OSError:
         pass
 
