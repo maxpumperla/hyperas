@@ -11,8 +11,8 @@ install:
   - pip install keras hyperopt $TF_BINARY_URL
   - pip install entrypoints
   - python setup.py install
-  - pip install pep8 pytest-pep8
+  - pip install pytest pytest-cov pep8 pytest-pep8
 script:
-  - py.test
+  - python -m pytest
 after_success:
   - coveralls
