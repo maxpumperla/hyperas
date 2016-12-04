@@ -62,7 +62,6 @@ def test_write_temp_files():
     os.remove(temp_file)
 
 
-
 def test_with_line_numbers():
     code = "def do_stuff(x):\n    foo"
     result = with_line_numbers(code)
