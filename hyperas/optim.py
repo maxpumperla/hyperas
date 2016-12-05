@@ -121,9 +121,6 @@ def get_hyperopt_model_string(model, data, notebook_name, verbose, stack):
             exporter = PythonExporter()
             source, _ = exporter.from_notebook_node(notebook)
     else:
-        # third item in inspect stack is the calling script
-        for i in inspect.stack():
-            print(i[1])
         calling_script_file = os.path.abspath(inspect.stack()[stack][1])
         with open(calling_script_file, 'r') as f:
             source = f.read()
