@@ -74,6 +74,8 @@ def base_minimizer(model, data, algo, max_evals, trials, rseed=1337,
     except OSError:
         pass
 
+    best_run = None
+
     try:  # for backward compatibility.
         best_run = fmin(keras_fmin_fnct,
                         space=get_space(),
@@ -82,6 +84,9 @@ def base_minimizer(model, data, algo, max_evals, trials, rseed=1337,
                         trials=trials,
                         rseed=rseed)
     except TypeError:
+        pass
+
+    if not best_run:
         best_run = fmin(keras_fmin_fnct,
                         space=get_space(),
                         algo=algo,
