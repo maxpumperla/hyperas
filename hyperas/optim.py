@@ -74,10 +74,8 @@ def base_minimizer(model, data, algo, max_evals, trials, rseed=1337,
     except OSError:
         pass
 
-    best_run = None
-
     try:  # for backward compatibility.
-        best_run = fmin(keras_fmin_fnct,
+        return fmin(keras_fmin_fnct,
                         space=get_space(),
                         algo=algo,
                         max_evals=max_evals,
@@ -86,15 +84,12 @@ def base_minimizer(model, data, algo, max_evals, trials, rseed=1337,
     except TypeError:
         pass
 
-    if not best_run:
-        best_run = fmin(keras_fmin_fnct,
-                        space=get_space(),
-                        algo=algo,
-                        max_evals=max_evals,
-                        trials=trials,
-                        rstate=np.random.RandomState(rseed))
-
-    return best_run
+    return fmin(keras_fmin_fnct,
+                    space=get_space(),
+                    algo=algo,
+                    max_evals=max_evals,
+                    trials=trials,
+                    rstate=np.random.RandomState(rseed))
 
 
 def best_ensemble(nb_ensemble_models, model, data, algo, max_evals,
