@@ -75,21 +75,21 @@ def base_minimizer(model, data, algo, max_evals, trials, rseed=1337,
         pass
 
     try:  # for backward compatibility.
-        best_run = fmin(keras_fmin_fnct,
+        return fmin(keras_fmin_fnct,
                         space=get_space(),
                         algo=algo,
                         max_evals=max_evals,
                         trials=trials,
                         rseed=rseed)
     except TypeError:
-        best_run = fmin(keras_fmin_fnct,
-                        space=get_space(),
-                        algo=algo,
-                        max_evals=max_evals,
-                        trials=trials,
-                        rstate=np.random.RandomState(rseed))
+        pass
 
-    return best_run
+    return fmin(keras_fmin_fnct,
+                    space=get_space(),
+                    algo=algo,
+                    max_evals=max_evals,
+                    trials=trials,
+                    rstate=np.random.RandomState(rseed))
 
 
 def best_ensemble(nb_ensemble_models, model, data, algo, max_evals,
