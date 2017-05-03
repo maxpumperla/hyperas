@@ -10,11 +10,15 @@ class ImportParser(ast.NodeVisitor):
         self.lines = []
         self.line_numbers = []
 
-    def visit_Import(self, node):
-        line = 'import {}'.format(self._import_names(node.names))
+    def visit_Import(self,node):
+        if (self._import_asnames(node.names)!=''):
+            line='import {} as {}'.format(self._import_names(node.names),
+       self._import_asnames(node.names) )
+        else:    
+            line = 'import {}'.format(self._import_names(node.names))
         self.line_numbers.append(node.lineno)
         self.lines.append(line)
-
+        
     def visit_ImportFrom(self, node):
         line = 'from {}{} import {}'.format(
             node.level * '.',
@@ -25,13 +29,20 @@ class ImportParser(ast.NodeVisitor):
 
     def _import_names(self, names):
         return ', '.join(map(attrgetter('name'), names))
+        
+    def _import_asnames(self, names):
+        asname=map(attrgetter('asname'), names)
+        if(asname!=[None]):
+            return ''.join(asname)
+        else:
+            return ''
 
 
 def extract_imports(source, verbose=True):
     tree = ast.parse(source)
     import_parser = ImportParser()
     import_parser.visit(tree)
-    import_lines = []
+    import_lines = ['#coding=utf-8\n']
     for line in import_parser.lines:
         if 'print_function' in line:
             import_lines.append(line + '\n')
@@ -63,10 +74,10 @@ def remove_all_comments(source):
     return string
 
 
-def temp_string(imports, model, data, space):
+def temp_string(imports, model, data,functions,space):
     temp = (imports + "from hyperopt import fmin, tpe, hp, STATUS_OK, Trials\n" +
             "from hyperas.distributions import conditional\n" +
-            data + model + "\n" + space)
+            functions+data + model + "\n" + space)
     return temp
 
 

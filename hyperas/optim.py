@@ -15,7 +15,7 @@ from .utils import (
 sys.path.append(".")
 
 
-def minimize(model, data, algo, max_evals, trials, rseed=1337, notebook_name=None, verbose=True):
+def minimize(model, data,algo, max_evals, trials, functions=None,rseed=1337, notebook_name=None, verbose=True):
     """Minimize a keras model for given data and implicit hyperparameters.
 
     Parameters
@@ -37,7 +37,8 @@ def minimize(model, data, algo, max_evals, trials, rseed=1337, notebook_name=Non
     A pair consisting of the results dictionary of the best run and the corresponing
     keras model.
     """
-    best_run = base_minimizer(model=model, data=data, algo=algo, max_evals=max_evals,
+    best_run = base_minimizer(model=model, data=data,
+                              functions=functions,algo=algo,max_evals=max_evals,
                               trials=trials, rseed=rseed, full_model_string=None,
                               notebook_name=notebook_name, verbose=verbose)
 
@@ -52,14 +53,14 @@ def minimize(model, data, algo, max_evals, trials, rseed=1337, notebook_name=Non
     return best_run, best_model
 
 
-def base_minimizer(model, data, algo, max_evals, trials, rseed=1337,
+def base_minimizer(model, data,functions,algo, max_evals, trials, rseed=1337,
                    full_model_string=None, notebook_name=None,
                    verbose=True, stack=3):
 
     if full_model_string is not None:
         model_str = full_model_string
     else:
-        model_str = get_hyperopt_model_string(model, data, notebook_name, verbose, stack)
+        model_str = get_hyperopt_model_string(model, data,functions,notebook_name, verbose, stack)
     temp_file = './temp_model.py'
     write_temp_files(model_str, temp_file)
 
@@ -110,7 +111,7 @@ def best_models(nb_models, model, data, algo, max_evals, trials):
     return model_list
 
 
-def get_hyperopt_model_string(model, data, notebook_name, verbose, stack):
+def get_hyperopt_model_string(model, data,functions,notebook_name, verbose, stack):
     model_string = inspect.getsource(model)
     model_string = remove_imports(model_string)
 
@@ -134,10 +135,11 @@ def get_hyperopt_model_string(model, data, notebook_name, verbose, stack):
     hyperopt_params = get_hyperparameters(model_string)
     space = get_hyperopt_space(parts, hyperopt_params, verbose)
 
+    functions_string=retrieve_function_string(functions,verbose)
     data_string = retrieve_data_string(data, verbose)
     model = hyperopt_keras_model(model_string, parts, aug_parts, verbose)
-
-    temp_str = temp_string(imports, model, data_string, space)
+    
+    temp_str = temp_string(imports, model, data_string,functions_string, space)
     return temp_str
 
 
@@ -170,7 +172,18 @@ def retrieve_data_string(data, verbose=True):
         print(with_line_numbers(data_string))
     return data_string
 
-
+def retrieve_function_string(functions,verbose=True):
+    function_strings=''
+    if functions==None:
+        return function_strings
+    for function in functions:
+        function_string=inspect.getsource(function)
+        function_strings=function_strings+function_string+'\n'
+    if verbose:
+        print(">>> Functions")
+        print(with_line_numbers(function_strings))
+    return function_strings
+    
 def hyperparameter_names(model_string):
     parts = []
     params = re.findall(r"(\{\{[^}]+}\})", model_string)
@@ -188,7 +201,6 @@ def hyperparameter_names(model_string):
         else:
             part_dict[part] = 0
     return parts
-
 
 def get_hyperparameters(model_string):
     hyperopt_params = re.findall(r"(\{\{[^}]+}\})", model_string)
