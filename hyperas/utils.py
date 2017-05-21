@@ -32,10 +32,7 @@ class ImportParser(ast.NodeVisitor):
         
     def _import_asnames(self, names):
         asname=map(attrgetter('asname'), names)
-        if(asname!=[None]):
-            return ''.join(asname)
-        else:
-            return ''
+        return ''.join(filter(None, asname))
 
 
 def extract_imports(source, verbose=True):
