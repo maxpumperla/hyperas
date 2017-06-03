@@ -11,11 +11,9 @@ class ImportParser(ast.NodeVisitor):
         self.line_numbers = []
 
     def visit_Import(self,node):
+        line = 'import {}'.format(self._import_names(node.names))
         if (self._import_asnames(node.names)!=''):
-            line='import {} as {}'.format(self._import_names(node.names),
-       self._import_asnames(node.names) )
-        else:    
-            line = 'import {}'.format(self._import_names(node.names))
+            line += ' as {}'.format(self._import_asnames(node.names) )
         self.line_numbers.append(node.lineno)
         self.lines.append(line)
         
@@ -24,6 +22,10 @@ class ImportParser(ast.NodeVisitor):
             node.level * '.',
             node.module or '',
             self._import_names(node.names))
+
+        if (self._import_asnames(node.names)!=''):
+            line += " as {}".format(self._import_asnames(node.names))
+
         self.line_numbers.append(node.lineno)
         self.lines.append(line)
 
