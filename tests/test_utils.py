@@ -12,6 +12,8 @@ import sys # ignore this comment
 # import nocomment
 from java.lang import stuff
 from _pydev_ import stuff
+from os.path import splitext as split
+import os.path.splitext as sp
 """
 
 TEST_SOURCE_2 = """
@@ -30,6 +32,8 @@ def test_extract_imports():
     assert 'ignore' not in result
     assert 'remove me' not in result
     assert 'from __future__ import print_function' in result
+    assert 'from os.path import splitext as split' in result
+    assert 'import os.path.splitext as sp' in result
 
 
 def test_remove_imports():
