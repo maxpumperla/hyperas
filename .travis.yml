@@ -5,7 +5,7 @@ matrix:
       - python: 2.7
         env:
           - TF_BINARY_URL=https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.0.1-cp27-none-linux_x86_64.whl
-          - IPYTHON=ipython[all]<6.0
+          - IPYTHON="ipython[all]==5.4.1"
       - python: 3.5
         env:
           - TF_BINARY_URL=https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.0.1-cp35-cp35m-linux_x86_64.whl
@@ -13,7 +13,7 @@ matrix:
 install:
   - pip install --upgrade pip
   - pip install --upgrade setuptools
-  - pip install keras hyperopt $TF_BINARY_URL $IPYTHON
+  - pip install $TF_BINARY_URL $IPYTHON
   - pip install entrypoints
   - python setup.py install
   - pip install pytest pytest-cov pep8 pytest-pep8
