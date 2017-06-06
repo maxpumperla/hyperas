@@ -21,6 +21,13 @@ import sys
 foo_bar()
 """
 
+TEST_SOURCE_3 = """
+def foo():
+    # a comment in a function
+    import sys
+    bar()
+"""
+
 
 def test_extract_imports():
     result = extract_imports(TEST_SOURCE)
@@ -39,6 +46,15 @@ def test_extract_imports():
 def test_remove_imports():
     result = remove_imports(TEST_SOURCE_2)
     assert 'foo_bar()' in result
+
+
+def test_remove_imports_in_function():
+    result = remove_imports(TEST_SOURCE_3)
+    # test function should have 3 lines (including the comment)
+    assert len(result.split('\n')[1:-1]) == 3
+    assert 'def foo():' in result
+    assert '# a comment in a function' in result
+    assert 'bar()' in result
 
 
 def test_remove_all_comments():

@@ -58,7 +58,7 @@ def remove_imports(source):
     tree = ast.parse(source)
     import_parser = ImportParser()
     import_parser.visit(tree)
-    lines = [line for line in source.split('\n') if not line.strip().startswith('#')]
+    lines = source.split('\n')  # the source including all comments, since we parse the line numbers with comments!
     lines_to_remove = set(import_parser.line_numbers)
     non_import_lines = [line for i, line in enumerate(lines, start=1) if i not in lines_to_remove]
     return '\n'.join(non_import_lines)
