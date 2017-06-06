@@ -16,6 +16,7 @@ install:
   - pip install --upgrade setuptools
   - pip install --upgrade wheel
   - pip install $TF_BINARY_URL
+  - pip install $IPYTHON
   - pip install entrypoints
   - python setup.py install
   - pip install pytest pytest-cov pep8 pytest-pep8
