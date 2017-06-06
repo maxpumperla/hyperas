@@ -47,11 +47,13 @@ def test_remove_all_comments():
 
 def test_temp_string():
     imports = 'imports\n'
-    data = 'data\n'
     model = 'model\n'
+    data = 'data\n'
+    functions = 'functions\n'
     space = 'space'
-    result = temp_string(imports, model, data, space)
-    assert result == "imports\nfrom hyperopt import fmin, tpe, hp, STATUS_OK, Trials\nfrom hyperas.distributions import conditional\ndata\nmodel\n\nspace"
+    result = temp_string(imports, model, data, functions, space)
+    assert result == "imports\nfrom hyperopt import fmin, tpe, hp, STATUS_OK, Trials\n" \
+                     "from hyperas.distributions import conditional\nfunctions\ndata\nmodel\n\nspace"
 
 
 def test_write_temp_files():
