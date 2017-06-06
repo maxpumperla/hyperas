@@ -5,7 +5,7 @@ install_requirements = [
     'keras',
     'hyperopt',
     'entrypoints',
-    'ipython<6.0',
+    'ipython[all]<6.0',
     'jupyter',
     'nbformat',
     'nbconvert'
