@@ -11,10 +11,11 @@ matrix:
           - TF_BINARY_URL=https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.0.1-cp35-cp35m-linux_x86_64.whl
           - IPYTHON=ipython[all]
 install:
+  - sudo apt-get remove ipython
   - pip install --upgrade pip
   - pip install --upgrade setuptools
+  - pip install --upgrade wheel
   - pip install $TF_BINARY_URL
-  - pip install --upgrade $IPYTHON
   - pip install entrypoints
   - python setup.py install
   - pip install pytest pytest-cov pep8 pytest-pep8
