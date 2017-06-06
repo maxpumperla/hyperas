@@ -12,6 +12,8 @@ import sys # ignore this comment
 # import nocomment
 from java.lang import stuff
 from _pydev_ import stuff
+from os.path import splitext as split
+import os.path.splitext as sp
 """
 
 TEST_SOURCE_2 = """
@@ -30,6 +32,8 @@ def test_extract_imports():
     assert 'ignore' not in result
     assert 'remove me' not in result
     assert 'from __future__ import print_function' in result
+    assert 'from os.path import splitext as split' in result
+    assert 'import os.path.splitext as sp' in result
 
 
 def test_remove_imports():
@@ -47,11 +51,13 @@ def test_remove_all_comments():
 
 def test_temp_string():
     imports = 'imports\n'
-    data = 'data\n'
     model = 'model\n'
+    data = 'data\n'
+    functions = 'functions\n'
     space = 'space'
-    result = temp_string(imports, model, data, space)
-    assert result == "imports\nfrom hyperopt import fmin, tpe, hp, STATUS_OK, Trials\nfrom hyperas.distributions import conditional\ndata\nmodel\n\nspace"
+    result = temp_string(imports, model, data, functions, space)
+    assert result == "imports\nfrom hyperopt import fmin, tpe, hp, STATUS_OK, Trials\n" \
+                     "from hyperas.distributions import conditional\nfunctions\ndata\nmodel\n\nspace"
 
 
 def test_write_temp_files():

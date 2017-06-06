@@ -132,15 +132,25 @@ def base_minimizer(model, data, functions, algo, max_evals, trials,
 
 
 def best_ensemble(nb_ensemble_models, model, data, algo, max_evals,
-                  trials, voting='hard', weights=None, nb_classes=None):
-    model_list = best_models(nb_models=nb_ensemble_models, model=model,
-                             data=data, algo=algo, max_evals=max_evals, trials=trials)
+                  trials, voting='hard', weights=None, nb_classes=None, functions=None):
+    model_list = best_models(nb_models=nb_ensemble_models,
+                             model=model,
+                             data=data,
+                             algo=algo,
+                             max_evals=max_evals,
+                             trials=trials,
+                             functions=functions)
     return VotingModel(model_list, voting, weights, nb_classes)
 
 
-def best_models(nb_models, model, data, algo, max_evals, trials):
-    base_minimizer(model=model, data=data, algo=algo, max_evals=max_evals,
-                   trials=trials, stack=4)
+def best_models(nb_models, model, data, algo, max_evals, trials, functions=None):
+    base_minimizer(model=model,
+                   data=data,
+                   functions=functions,
+                   algo=algo,
+                   max_evals=max_evals,
+                   trials=trials,
+                   stack=4)
     if len(trials) < nb_models:
         nb_models = len(trials)
     scores = [trial.get('result').get('loss') for trial in trials]
@@ -213,7 +223,7 @@ def retrieve_data_string(data, verbose=True):
 
 def retrieve_function_string(functions, verbose=True):
     function_strings = ''
-    if functions == None:
+    if functions is None:
         return function_strings
     for function in functions:
         function_string = inspect.getsource(function)

@@ -3,14 +3,20 @@ language: python
 matrix:
    include:
       - python: 2.7
-        env: TF_BINARY_URL=https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.0.1-cp27-none-linux_x86_64.whl
+        env:
+          - IPYTHON="ipython[all]==5.4.1"
       - python: 3.5
-        env: TF_BINARY_URL=https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.0.1-cp35-cp35m-linux_x86_64.whl
+        env:
+          - IPYTHON=ipython[all]
 install:
+  - sudo apt-get remove ipython
   - pip install --upgrade pip
   - pip install --upgrade setuptools
-  - pip install keras hyperopt $TF_BINARY_URL
+  - pip install --upgrade wheel
+  - pip install $IPYTHON
   - pip install entrypoints
+  - pip install tensorflow
+  - pip install --only-binary=numpy,scipy numpy scipy
   - python setup.py install
   - pip install pytest pytest-cov pep8 pytest-pep8
 script:

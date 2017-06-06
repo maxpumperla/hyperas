@@ -105,7 +105,8 @@ def ensemble_model(X_train, X_test, Y_train, Y_test):
 def test_ensemble():
     X_train, X_test, Y_train, Y_test = data()
     optim.best_ensemble(nb_ensemble_models=2,
-                        model=model, data=data,
+                        model=model,
+                        data=data,
                         algo=rand.suggest,
                         max_evals=1,
                         trials=Trials(),
