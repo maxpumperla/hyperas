@@ -1,13 +1,14 @@
-import numpy as np
-from hyperopt import fmin
-from .ensemble import VotingModel
 import inspect
 import os
 import re
 import sys
+
 import nbformat
+import numpy as np
+from hyperopt import fmin, space_eval
 from nbconvert import PythonExporter
 
+from .ensemble import VotingModel
 from .utils import (
     remove_imports, remove_all_comments, extract_imports, temp_string,
     write_temp_files, determine_indent, with_line_numbers)
@@ -15,15 +16,26 @@ from .utils import (
 sys.path.append(".")
 
 
-def minimize(model, data,algo, max_evals, trials, functions=None,rseed=1337, notebook_name=None, verbose=True):
-    """Minimize a keras model for given data and implicit hyperparameters.
+def minimize(model,
+             data,
+             algo,
+             max_evals,
+             trials,
+             functions=None,
+             rseed=1337,
+             notebook_name=None,
+             verbose=True,
+             eval_space=False,
+             return_space=False):
+    """
+    Minimize a keras model for given data and implicit hyperparameters.
 
     Parameters
     ----------
     model: A function defining a keras model with hyperas templates, which returns a
         valid hyperopt results dictionary, e.g.
         return {'loss': -acc, 'status': STATUS_OK}
-    data: A parameterless function that defines and return all data needed in the above
+    data: A parameter-less function that defines and return all data needed in the above
         model definition.
     algo: A hyperopt algorithm, like tpe.suggest or rand.suggest
     max_evals: Maximum number of optimization runs
@@ -31,16 +43,27 @@ def minimize(model, data,algo, max_evals, trials, functions=None,rseed=1337, not
         optimization runs
     rseed: Integer random seed for experiments
     notebook_name: If running from an ipython notebook, provide filename (not path)
+    verbose: Print verbose output
+    eval_space: Evaluate the best run in the search space such that 'choice's contain actually meaningful values instead
+                of mere indices
+    return_space: Return the hyperopt search space object (e.g. for further processing) as last return value
 
     Returns
     -------
-    A pair consisting of the results dictionary of the best run and the corresponing
+    If `return_space` is False: A pair consisting of the results dictionary of the best run and the corresponding
     keras model.
+    If `return_space` is True: The pair of best result and correspondeing keras model, and the hyperopt search space
     """
-    best_run = base_minimizer(model=model, data=data,
-                              functions=functions,algo=algo,max_evals=max_evals,
-                              trials=trials, rseed=rseed, full_model_string=None,
-                              notebook_name=notebook_name, verbose=verbose)
+    best_run, space = base_minimizer(model=model,
+                                     data=data,
+                                     functions=functions,
+                                     algo=algo,
+                                     max_evals=max_evals,
+                                     trials=trials,
+                                     rseed=rseed,
+                                     full_model_string=None,
+                                     notebook_name=notebook_name,
+                                     verbose=verbose)
 
     best_model = None
     for trial in trials:
@@ -50,17 +73,25 @@ def minimize(model, data,algo, max_evals, trials, functions=None,rseed=1337, not
         if trial.get('misc').get('vals') == best_run and 'model' in trial.get('result').keys():
             best_model = trial.get('result').get('model')
 
-    return best_run, best_model
+    if eval_space is True:
+        # evaluate the search space
+        best_run = space_eval(space, best_run)
+
+    if return_space is True:
+        # return the space as well
+        return best_run, best_model, space
+    else:
+        # the default case for backwards compatibility with expanded return arguments
+        return best_run, best_model
 
 
-def base_minimizer(model, data,functions,algo, max_evals, trials, rseed=1337,
-                   full_model_string=None, notebook_name=None,
+def base_minimizer(model, data, functions, algo, max_evals, trials,
+                   rseed=1337, full_model_string=None, notebook_name=None,
                    verbose=True, stack=3):
-
     if full_model_string is not None:
         model_str = full_model_string
     else:
-        model_str = get_hyperopt_model_string(model, data,functions,notebook_name, verbose, stack)
+        model_str = get_hyperopt_model_string(model, data, functions, notebook_name, verbose, stack)
     temp_file = './temp_model.py'
     write_temp_files(model_str, temp_file)
 
@@ -75,34 +106,51 @@ def base_minimizer(model, data,functions,algo, max_evals, trials, rseed=1337,
     except OSError:
         pass
 
-    try:  # for backward compatibility.
-        return fmin(keras_fmin_fnct,
-                        space=get_space(),
-                        algo=algo,
-                        max_evals=max_evals,
-                        trials=trials,
-                        rseed=rseed)
+    try:
+        # for backward compatibility.
+        return (
+            fmin(keras_fmin_fnct,
+                 space=get_space(),
+                 algo=algo,
+                 max_evals=max_evals,
+                 trials=trials,
+                 rseed=rseed),
+            get_space()
+        )
     except TypeError:
         pass
 
-    return fmin(keras_fmin_fnct,
-                    space=get_space(),
-                    algo=algo,
-                    max_evals=max_evals,
-                    trials=trials,
-                    rstate=np.random.RandomState(rseed))
+    return (
+        fmin(keras_fmin_fnct,
+             space=get_space(),
+             algo=algo,
+             max_evals=max_evals,
+             trials=trials,
+             rstate=np.random.RandomState(rseed)),
+        get_space()
+    )
 
 
 def best_ensemble(nb_ensemble_models, model, data, algo, max_evals,
-                  trials, voting='hard', weights=None, nb_classes=None):
-    model_list = best_models(nb_models=nb_ensemble_models, model=model,
-                             data=data, algo=algo, max_evals=max_evals, trials=trials)
+                  trials, voting='hard', weights=None, nb_classes=None, functions=None):
+    model_list = best_models(nb_models=nb_ensemble_models,
+                             model=model,
+                             data=data,
+                             algo=algo,
+                             max_evals=max_evals,
+                             trials=trials,
+                             functions=functions)
     return VotingModel(model_list, voting, weights, nb_classes)
 
 
-def best_models(nb_models, model, data, algo, max_evals, trials):
-    base_minimizer(model=model, data=data, algo=algo, max_evals=max_evals,
-                   trials=trials, stack=4)
+def best_models(nb_models, model, data, algo, max_evals, trials, functions=None):
+    base_minimizer(model=model,
+                   data=data,
+                   functions=functions,
+                   algo=algo,
+                   max_evals=max_evals,
+                   trials=trials,
+                   stack=4)
     if len(trials) < nb_models:
         nb_models = len(trials)
     scores = [trial.get('result').get('loss') for trial in trials]
@@ -111,7 +159,7 @@ def best_models(nb_models, model, data, algo, max_evals, trials):
     return model_list
 
 
-def get_hyperopt_model_string(model, data,functions,notebook_name, verbose, stack):
+def get_hyperopt_model_string(model, data, functions, notebook_name, verbose, stack):
     model_string = inspect.getsource(model)
     model_string = remove_imports(model_string)
 
@@ -135,11 +183,11 @@ def get_hyperopt_model_string(model, data,functions,notebook_name, verbose, stac
     hyperopt_params = get_hyperparameters(model_string)
     space = get_hyperopt_space(parts, hyperopt_params, verbose)
 
-    functions_string=retrieve_function_string(functions,verbose)
+    functions_string = retrieve_function_string(functions, verbose)
     data_string = retrieve_data_string(data, verbose)
     model = hyperopt_keras_model(model_string, parts, aug_parts, verbose)
-    
-    temp_str = temp_string(imports, model, data_string,functions_string, space)
+
+    temp_str = temp_string(imports, model, data_string, functions_string, space)
     return temp_str
 
 
@@ -174,18 +222,20 @@ def retrieve_data_string(data, verbose=True):
         print(with_line_numbers(data_string))
     return data_string
 
-def retrieve_function_string(functions,verbose=True):
-    function_strings=''
-    if functions==None:
+
+def retrieve_function_string(functions, verbose=True):
+    function_strings = ''
+    if functions is None:
         return function_strings
     for function in functions:
-        function_string=inspect.getsource(function)
-        function_strings=function_strings+function_string+'\n'
+        function_string = inspect.getsource(function)
+        function_strings = function_strings + function_string + '\n'
     if verbose:
         print(">>> Functions")
         print(with_line_numbers(function_strings))
     return function_strings
-    
+
+
 def hyperparameter_names(model_string):
     parts = []
     params = re.findall(r"(\{\{[^}]+}\})", model_string)
@@ -203,6 +253,7 @@ def hyperparameter_names(model_string):
         else:
             part_dict[part] = 0
     return parts
+
 
 def get_hyperparameters(model_string):
     hyperopt_params = re.findall(r"(\{\{[^}]+}\})", model_string)

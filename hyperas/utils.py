@@ -1,41 +1,37 @@
 import ast
-from operator import attrgetter
 import re
 import warnings
+from operator import attrgetter
 
 
 class ImportParser(ast.NodeVisitor):
-
     def __init__(self):
         self.lines = []
         self.line_numbers = []
 
-    def visit_Import(self,node):
-        if (self._import_asnames(node.names)!=''):
-            line='import {} as {}'.format(self._import_names(node.names),
-       self._import_asnames(node.names) )
-        else:    
-            line = 'import {}'.format(self._import_names(node.names))
+    def visit_Import(self, node):
+        line = 'import {}'.format(self._import_names(node.names))
+        if self._import_asnames(node.names) != '':
+            line += ' as {}'.format(self._import_asnames(node.names))
         self.line_numbers.append(node.lineno)
         self.lines.append(line)
-        
+
     def visit_ImportFrom(self, node):
         line = 'from {}{} import {}'.format(
             node.level * '.',
             node.module or '',
             self._import_names(node.names))
+        if self._import_asnames(node.names) != '':
+            line += ' as {}'.format(self._import_asnames(node.names))
         self.line_numbers.append(node.lineno)
         self.lines.append(line)
 
     def _import_names(self, names):
         return ', '.join(map(attrgetter('name'), names))
-        
+
     def _import_asnames(self, names):
-        asname=map(attrgetter('asname'), names)
-        if(asname!=[None]):
-            return ''.join(asname)
-        else:
-            return ''
+        asname = map(attrgetter('asname'), names)
+        return ''.join(filter(None, asname))
 
 
 def extract_imports(source, verbose=True):
@@ -74,10 +70,10 @@ def remove_all_comments(source):
     return string
 
 
-def temp_string(imports, model, data,functions,space):
+def temp_string(imports, model, data, functions, space):
     temp = (imports + "from hyperopt import fmin, tpe, hp, STATUS_OK, Trials\n" +
             "from hyperas.distributions import conditional\n" +
-            functions+data + model + "\n" + space)
+            functions + data + model + "\n" + space)
     return temp
 
 
@@ -148,6 +144,7 @@ def determine_indent(str):
         new_indent = block_start.groupdict()['indent']
         if indent and new_indent != indent:
             warnings.warn('Inconsistent indentation detected.'
-                          'Found "%s" (length: %i) as well as "%s" (length: %i)' % (indent, len(indent), new_indent, len(new_indent)))
+                          'Found "%s" (length: %i) as well as "%s" (length: %i)' % (
+                              indent, len(indent), new_indent, len(new_indent)))
         indent = new_indent
     return indent
