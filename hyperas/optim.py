@@ -204,12 +204,11 @@ def get_hyperopt_space(parts, hyperopt_params, verbose=True):
     return space
 
 
-def retrieve_data_string(data, verbose=True):
-    data_string = inspect.getsource(data)
+def _retrieve_data_string(data_string, verbose=True):
     first_line = data_string.split("\n")[0]
     indent_length = len(determine_indent(data_string))
     data_string = data_string.replace(first_line, "")
-    r = re.compile('^\s*return.*')
+    r = re.compile(r'^\s*return.*')
     last_line = [s for s in reversed(data_string.split("\n")) if r.match(s)][0]
     data_string = data_string.replace(last_line, "")
 
@@ -221,6 +220,10 @@ def retrieve_data_string(data, verbose=True):
         print(">>> Data")
         print(with_line_numbers(data_string))
     return data_string
+
+
+def retrieve_data_string(data, verbose=True):
+    return _retrieve_data_string(data, verbose=verbose)
 
 
 def retrieve_function_string(functions, verbose=True):
