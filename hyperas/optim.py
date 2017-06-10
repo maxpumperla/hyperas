@@ -204,7 +204,8 @@ def get_hyperopt_space(parts, hyperopt_params, verbose=True):
     return space
 
 
-def _retrieve_data_string(data_string, verbose=True):
+def retrieve_data_string(data, verbose=True):
+    data_string = inspect.getsource(data)
     first_line = data_string.split("\n")[0]
     indent_length = len(determine_indent(data_string))
     data_string = data_string.replace(first_line, "")
@@ -220,10 +221,6 @@ def _retrieve_data_string(data_string, verbose=True):
         print(">>> Data")
         print(with_line_numbers(data_string))
     return data_string
-
-
-def retrieve_data_string(data, verbose=True):
-    return _retrieve_data_string(data, verbose=verbose)
 
 
 def retrieve_function_string(functions, verbose=True):
