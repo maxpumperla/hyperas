@@ -209,7 +209,9 @@ def retrieve_data_string(data, verbose=True):
     first_line = data_string.split("\n")[0]
     indent_length = len(determine_indent(data_string))
     data_string = data_string.replace(first_line, "")
-    data_string = re.sub(r"return.*", "", data_string)
+    r = re.compile(r'^\s*return.*')
+    last_line = [s for s in reversed(data_string.split("\n")) if r.match(s)][0]
+    data_string = data_string.replace(last_line, "")
 
     split_data = data_string.split("\n")
     for i, line in enumerate(split_data):
