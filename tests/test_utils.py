@@ -13,11 +13,20 @@ import sys # ignore this comment
 # import nocomment
 from java.lang import stuff
 from _pydev_ import stuff
+from os.path import splitext as split
+import os.path.splitext as sp
 """
 
 TEST_SOURCE_2 = """
 import sys
 foo_bar()
+"""
+
+TEST_SOURCE_3 = """
+def foo():
+    # a comment in a function
+    import sys
+    bar()
 """
 
 
@@ -32,11 +41,22 @@ def test_extract_imports():
     assert 'ignore' not in result
     assert 'remove me' not in result
     assert 'from __future__ import print_function' in result
+    assert 'from os.path import splitext as split' in result
+    assert 'import os.path.splitext as sp' in result
 
 
 def test_remove_imports():
     result = remove_imports(TEST_SOURCE_2)
     assert 'foo_bar()' in result
+
+
+def test_remove_imports_in_function():
+    result = remove_imports(TEST_SOURCE_3)
+    # test function should have 3 lines (including the comment)
+    assert len(result.split('\n')[1:-1]) == 3
+    assert 'def foo():' in result
+    assert '# a comment in a function' in result
+    assert 'bar()' in result
 
 
 def test_remove_all_comments():
@@ -49,11 +69,13 @@ def test_remove_all_comments():
 
 def test_temp_string():
     imports = 'imports\n'
-    data = 'data\n'
     model = 'model\n'
+    data = 'data\n'
+    functions = 'functions\n'
     space = 'space'
-    result = temp_string(imports, model, data, space)
-    assert result == "imports\nfrom hyperopt import fmin, tpe, hp, STATUS_OK, Trials\nfrom hyperas.distributions import conditional\ndata\nmodel\n\nspace"
+    result = temp_string(imports, model, data, functions, space)
+    assert result == "imports\nfrom hyperopt import fmin, tpe, hp, STATUS_OK, Trials\n" \
+                     "from hyperas.distributions import conditional\nfunctions\ndata\nmodel\n\nspace"
 
 
 def test_write_temp_files():
