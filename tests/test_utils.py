@@ -6,6 +6,7 @@ from hyperas.utils import (
 TEST_SOURCE = """
 from __future__ import print_function
 from sys import path
+from os import walk as walk2
 import os
 import sys # ignore this comment
 ''' remove me '''
@@ -36,6 +37,7 @@ def test_extract_imports():
     assert '_pydev_' not in result
     assert 'try:\n    import os\nexcept:\n    pass\n' in result
     assert 'from sys import path' in result
+    assert 'from os import walk as walk2' in result
     assert 'ignore' not in result
     assert 'remove me' not in result
     assert 'from __future__ import print_function' in result
