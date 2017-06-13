@@ -68,9 +68,13 @@ def minimize(model,
     best_model = None
     for trial in trials:
         vals = trial.get('misc').get('vals')
-        for key in vals.keys():
-            vals[key] = vals[key][0]
-        if trial.get('misc').get('vals') == best_run and 'model' in trial.get('result').keys():
+        # unpack the values from lists without overwriting the mutable dict within 'trial'
+        unpacked_vals = {}
+        for k, v in list(vals.items()):
+            if v:
+                unpacked_vals[k] = v[0]
+        # identify the best run (comes with unpacked values from the hyperopt function `base.Trials.argmin`)
+        if unpacked_vals == best_run and 'model' in trial.get('result').keys():
             best_model = trial.get('result').get('model')
 
     if eval_space is True:
@@ -114,7 +118,8 @@ def base_minimizer(model, data, functions, algo, max_evals, trials,
                  algo=algo,
                  max_evals=max_evals,
                  trials=trials,
-                 rseed=rseed),
+                 rseed=rseed,
+                 return_argmin=True),
             get_space()
         )
     except TypeError:
@@ -126,7 +131,8 @@ def base_minimizer(model, data, functions, algo, max_evals, trials,
              algo=algo,
              max_evals=max_evals,
              trials=trials,
-             rstate=np.random.RandomState(rseed)),
+             rstate=np.random.RandomState(rseed),
+             return_argmin=True),
         get_space()
     )
 
