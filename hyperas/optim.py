@@ -5,13 +5,14 @@ import sys
 
 import nbformat
 import numpy as np
-from hyperopt import fmin, space_eval
+from hyperopt import fmin
 from nbconvert import PythonExporter
 
 from .ensemble import VotingModel
 from .utils import (
     remove_imports, remove_all_comments, extract_imports, temp_string,
-    write_temp_files, determine_indent, with_line_numbers)
+    write_temp_files, determine_indent, with_line_numbers, unpack_hyperopt_vals,
+    eval_hyperopt_space)
 
 sys.path.append(".")
 
@@ -52,7 +53,7 @@ def minimize(model,
     -------
     If `return_space` is False: A pair consisting of the results dictionary of the best run and the corresponding
     keras model.
-    If `return_space` is True: The pair of best result and correspondeing keras model, and the hyperopt search space
+    If `return_space` is True: The pair of best result and corresponding keras model, and the hyperopt search space
     """
     best_run, space = base_minimizer(model=model,
                                      data=data,
@@ -69,17 +70,14 @@ def minimize(model,
     for trial in trials:
         vals = trial.get('misc').get('vals')
         # unpack the values from lists without overwriting the mutable dict within 'trial'
-        unpacked_vals = {}
-        for k, v in list(vals.items()):
-            if v:
-                unpacked_vals[k] = v[0]
-        # identify the best run (comes with unpacked values from the hyperopt function `base.Trials.argmin`)
+        unpacked_vals = unpack_hyperopt_vals(vals)
+        # identify the best_run (comes with unpacked values from the hyperopt function `base.Trials.argmin`)
         if unpacked_vals == best_run and 'model' in trial.get('result').keys():
             best_model = trial.get('result').get('model')
 
     if eval_space is True:
         # evaluate the search space
-        best_run = space_eval(space, best_run)
+        best_run = eval_hyperopt_space(space, best_run)
 
     if return_space is True:
         # return the space as well

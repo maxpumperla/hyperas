@@ -1,7 +1,9 @@
 import os
+from hyperopt import hp
 from hyperas.utils import (
     extract_imports, remove_imports, remove_all_comments, temp_string,
-    write_temp_files, with_line_numbers, determine_indent)
+    write_temp_files, with_line_numbers, determine_indent, unpack_hyperopt_vals,
+    eval_hyperopt_space)
 
 TEST_SOURCE = """
 from __future__ import print_function
@@ -100,3 +102,73 @@ def test_determine_indent():
     assert determine_indent(code) == '  '
     code = "def do_stuff(x):\n\tfoo"
     assert determine_indent(code) == '\t'
+
+
+def test_unpack_hyperopt_vals():
+    test_vals = {
+        'filters_conv_A': [0],
+        'filters_conv_B': [1],
+        'rate': [0.1553971698387464],
+        'units': [1],
+        'rate_1': [0.4114807190252343],
+        'lr': [2.0215692016654265e-05],
+        'momentum': [2],
+        'nesterov': [0]
+    }
+    result = {
+        'filters_conv_A': 0,
+        'filters_conv_B': 1,
+        'rate': 0.1553971698387464,
+        'units': 1,
+        'rate_1': 0.4114807190252343,
+        'lr': 2.0215692016654265e-05,
+        'momentum': 2,
+        'nesterov': 0
+    }
+    assert unpack_hyperopt_vals(test_vals) == result
+
+
+def test_eval_hyperopt_space():
+    space = {
+        'filters_conv_A': hp.choice('filters_conv_A', [8, 16]),
+        'filters_conv_B': hp.choice('filters_conv_B', [16, 24]),
+        'rate': hp.uniform('rate', 0, 1),
+        'units': hp.choice('units', [96, 128, 192]),
+        'rate_1': hp.uniform('rate_1', 0, 1),
+        'lr': hp.uniform('lr', 1e-5, 1e-4),
+        'momentum': hp.choice('momentum', [0.5, 0.9, 0.999]),
+        'nesterov': hp.choice('nesterov', [True, False])
+    }
+    test_vals = {
+        'filters_conv_A': [0],
+        'filters_conv_B': [1],
+        'rate': [0.1553971698387464],
+        'units': [1],
+        'rate_1': [0.4114807190252343],
+        'lr': [2.0215692016654265e-05],
+        'momentum': [2],
+        'nesterov': [0]
+    }
+    test_vals_unpacked = {
+        'filters_conv_A': 0,
+        'filters_conv_B': 1,
+        'rate': 0.1553971698387464,
+        'units': 1,
+        'rate_1': 0.4114807190252343,
+        'lr': 2.0215692016654265e-05,
+        'momentum': 2,
+        'nesterov': 0
+    }
+    result = {
+        'filters_conv_A': 8,
+        'filters_conv_B': 24,
+        'rate': 0.1553971698387464,
+        'units': 128,
+        'rate_1': 0.4114807190252343,
+        'lr': 2.0215692016654265e-05,
+        'momentum': 0.999,
+        'nesterov': True
+    }
+
+    assert eval_hyperopt_space(space, test_vals) == result
+    assert eval_hyperopt_space(space, test_vals_unpacked) == result
