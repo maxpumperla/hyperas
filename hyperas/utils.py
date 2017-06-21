@@ -3,17 +3,18 @@ import re
 import warnings
 from operator import attrgetter
 
+from hyperopt import space_eval
+
 
 class ImportParser(ast.NodeVisitor):
     def __init__(self):
         self.lines = []
         self.line_numbers = []
 
-
-    def visit_Import(self,node):
+    def visit_Import(self, node):
         line = 'import {}'.format(self._import_names(node.names))
-        if (self._import_asnames(node.names)!=''):
-            line += ' as {}'.format(self._import_asnames(node.names) )
+        if (self._import_asnames(node.names) != ''):
+            line += ' as {}'.format(self._import_asnames(node.names))
         self.line_numbers.append(node.lineno)
         self.lines.append(line)
 
@@ -22,7 +23,7 @@ class ImportParser(ast.NodeVisitor):
             node.level * '.',
             node.module or '',
             self._import_names(node.names))
-        if (self._import_asnames(node.names)!=''):
+        if (self._import_asnames(node.names) != ''):
             line += " as {}".format(self._import_asnames(node.names))
         self.line_numbers.append(node.lineno)
         self.lines.append(line)
@@ -91,7 +92,7 @@ def with_line_numbers(code):
 
     Parameters
     ----------
-    str : string
+    code : string
        any multiline text, such as as (fragments) of source code
 
     Returns
@@ -149,3 +150,34 @@ def determine_indent(str):
                               indent, len(indent), new_indent, len(new_indent)))
         indent = new_indent
     return indent
+
+
+def unpack_hyperopt_vals(vals):
+    """
+    Unpack values from a hyperopt return dictionary where values are wrapped in a list.
+    :param vals: dict
+    :return: dict
+        copy of the dictionary with unpacked values
+    """
+    assert isinstance(vals, dict), "Parameter must be given as dict."
+    ret = {}
+    for k, v in list(vals.items()):
+        try:
+            ret[k] = v[0]
+        except (TypeError, IndexError):
+            ret[k] = v
+    return ret
+
+
+def eval_hyperopt_space(space, vals):
+    """
+    Evaluate a set of parameter values within the hyperopt space.
+    Optionally unpacks the values, if they are wrapped in lists.
+    :param space: dict
+        the hyperopt space dictionary
+    :param vals: dict
+        the values from a hyperopt trial
+    :return: evaluated space
+    """
+    unpacked_vals = unpack_hyperopt_vals(vals)
+    return space_eval(space, unpacked_vals)
