@@ -97,6 +97,9 @@ def base_minimizer(model, data, functions, algo, max_evals, trials,
     temp_file = './temp_model.py'
     write_temp_files(model_str, temp_file)
 
+    if 'temp_model' in sys.modules:  
+        del sys.modules["temp_model"]
+        
     try:
         from temp_model import keras_fmin_fnct, get_space
     except:
