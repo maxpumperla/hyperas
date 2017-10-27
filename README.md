@@ -7,45 +7,76 @@ pip install hyperas
 ```
 
 ## Quick start
-Assume you have an existing keras model like the following.
+
+Assume you have data generated as such
+
 ```{python}
-model = Sequential()
-model.add(Dense(512, input_shape=(784,)))
-model.add(Activation('relu'))
-model.add(Dropout(0.2))
-model.add(Dense(512))
-model.add(Activation('relu'))
-model.add(Dropout(0.2)
-model.add(Dense(10))
-model.add(Activation('softmax'))
+def data():
+    x_train = np.zeros(100)
+    x_test = np.zeros(100)
+    y_train = np.zeros(100)
+    y_test = np.zeros(100)
+    return x_train, y_train, x_test, y_test
 ```
-To do hyper-parameter optimization on this model, just wrap the parameters you want to optimize into double curly brackets and choose a distribution over which to run the algorithm. In the above example, let's say we want to optimize for the best dropout probability in both dropout layers. Choosing a uniform distribution over the interval ```[0,1]```, this translates into the following definition.
+
+and an existing keras model like the following
+
+```{python}
+def create_model(x_train, y_train, x_test, y_test):
+    model = Sequential()
+    model.add(Dense(512, input_shape=(784,)))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.2))
+    model.add(Dense(512))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.2)
+    model.add(Dense(10))
+    model.add(Activation('softmax'))
+
+    # ... model fitting
+
+    return model
+```
+
+
+To do hyper-parameter optimization on this model,
+just wrap the parameters you want to optimize into double curly brackets
+and choose a distribution over which to run the algorithm.
+
+In the above example, let's say we want to optimize
+for the best dropout probability in both dropout layers.
+Choosing a uniform distribution over the interval ```[0,1]```,
+this translates into the following definition.
+Note that before returning the model, to optimize,
+we also have to define which evaluation metric of the model is important to us.
+For example, in the following, we optimize for accuracy.
+
 
 ```{python}
 from hyperas.distributions import uniform
 
-model = Sequential()
-model.add(Dense(512, input_shape=(784,)))
-model.add(Activation('relu'))
-model.add(Dropout({{uniform(0, 1)}}))
-model.add(Dense(512))
-model.add(Activation('relu'))
-model.add(Dropout({{uniform(0, 1)}}))
-model.add(Dense(10))
-model.add(Activation('softmax'))
+def create_model(x_train, y_train, x_test, y_test):
+    model = Sequential()
+    model.add(Dense(512, input_shape=(784,)))
+    model.add(Activation('relu'))
+    model.add(Dropout({{uniform(0, 1)}}))
+    model.add(Dense(512))
+    model.add(Activation('relu'))
+    model.add(Dropout({{uniform(0, 1)}}))
+    model.add(Dense(10))
+    model.add(Activation('softmax'))
+
+    # ... model fitting
+
+    score = model.evaluate(x_test, y_test, verbose=0)
+    accuracy = score[1]
+    return {'loss': -accuracy, 'status': STATUS_OK, 'model': model}
 ```
 
-After having trained the model, to optimize, we also have to define which evaluation metric of the model is important to us. For example, if we wish to optimize for accuracy, the following example does the trick:
-
-```{python}
-score = model.evaluate(X_test, Y_test, verbose=0)
-accuracy = score[1]
-return {'loss': -accuracy, 'status': STATUS_OK}
-```
 The last step is to actually run the optimization, which is done as follows:
 
 ```{python}
-best_run = optim.minimize(model=model,
+best_run = optim.minimize(model=create_model,
                           data=data,
                           algo=tpe.suggest,
                           max_evals=10,
@@ -53,8 +84,11 @@ best_run = optim.minimize(model=model,
 ```
 In this example we use at most 10 evaluation runs and the TPE algorithm from hyperopt for optimization.
 
+Check the "complete example" below for more details.
+
+
 ## Complete example
-**Note:** It is important to wrap your data and model into functions as shown below, and then pass them as parameters to the minimizer. ```data()``` returns the data the ```model()``` needs. An extended version of the above example in one script reads as follows. This example shows many potential use cases of hyperas, including:
+**Note:** It is important to wrap your data and model into functions as shown below, and then pass them as parameters to the minimizer. ```data()``` returns the data the ```create_model()``` needs. An extended version of the above example in one script reads as follows. This example shows many potential use cases of hyperas, including:
 - Varying dropout probabilities, sampling from a uniform distribution
 - Different layer output sizes
 - Different optimization algorithms to use
@@ -80,7 +114,7 @@ def data():
     """
     Data providing function:
 
-    This function is separated from model() so that hyperopt
+    This function is separated from create_model() so that hyperopt
     won't reload data for each evaluation run.
     """
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -96,7 +130,7 @@ def data():
     return x_train, y_train, x_test, y_test
 
 
-def model(x_train, y_train, x_test, y_test):
+def create_model(x_train, y_train, x_test, y_test):
     """
     Model providing function:
 
@@ -141,7 +175,7 @@ def model(x_train, y_train, x_test, y_test):
 
 
 if __name__ == '__main__':
-    best_run, best_model = optim.minimize(model=model,
+    best_run, best_model = optim.minimize(model=create_model,
                                           data=data,
                                           algo=tpe.suggest,
                                           max_evals=5,
@@ -152,3 +186,38 @@ if __name__ == '__main__':
     print("Best performing model chosen hyper-parameters:")
     print(best_run)
 ```
+
+## FAQ
+
+Here is a list of a few popular errors
+
+### `TypeError: require string label`
+
+You're probably trying to execute the model creation code, with the templates, directly in python.
+That fails simply because python cannot run the templating in the braces, e.g. `{{uniform..}}`.
+The `def create_model(...)` function is in fact not a valid python function anymore.
+
+You need to wrap your code in a `def create_model(...): ...` function,
+and then call it from `optim.minimize(model=create_model,...` like in the example.
+
+The reason for this is that hyperas works by doing template replacement
+of everything in the `{{...}}` into a separate temporary file,
+and then running the model with the replaced braces (think jinja templating).
+
+This is the basis of how hyperas simplifies usage of hyperopt by being a "very simple wrapper".
+
+
+### `TypeError: 'generator' object is not subscriptable`
+
+This is currently a [known issue](https://github.com/maxpumperla/hyperas/issues/125).
+
+Just `pip install networkx==1.11`
+
+
+### `NameError: global name 'X_train' is not defined`
+
+Maybe you forgot to return the `x_train` argument in the `def create_model(x_train...)` call
+from the `def data(): ...` function.
+
+You are not restricted to the same list of arguments as in the example.
+Any arguments you return from `data()` will be passed to `create_model()`
