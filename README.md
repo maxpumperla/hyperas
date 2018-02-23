@@ -221,3 +221,17 @@ from the `def data(): ...` function.
 
 You are not restricted to the same list of arguments as in the example.
 Any arguments you return from `data()` will be passed to `create_model()`
+
+### notebook adjustment
+
+If you find error like ["No such file or directory"](https://github.com/maxpumperla/hyperas/issues/83) or [OSError, Err22](https://github.com/maxpumperla/hyperas/issues/149), you may need add `notebook_name='simple_notebook'`(assume your current notebook name is `simple_notebook`) in `optim.minimize` function like this:
+
+```python
+best_run, best_model = optim.minimize(model=model,
+                                      data=data,
+                                      algo=tpe.suggest,
+                                      max_evals=5,
+                                      trials=Trials(),
+                                      notebook_name='simple_notebook')
+```
+
