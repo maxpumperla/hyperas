@@ -242,3 +242,7 @@ All we do is parse the `data` and `model` templates and translate them into prop
 ### How to read the output of a hyperas model?
 
 Hyperas translates your script into `hyperopt` compliant code, see [here](https://github.com/maxpumperla/hyperas/issues/140) for some guidance on how to interpret the result.
+
+### What if I need more flexibility loading data and adapting my model?
+
+Hyperas is a convenience wrapper around Hyperopt that has some limitations. If it's not _convenient_ to use in your situation, simply don't use it -- and choose Hyperopt instead. All you can do with Hyperas you can also do with Hyperopt, it's just a different way of defining your model. If you want to squeeze some flexibility out of Hyperas anyway, take a look [here](https://github.com/maxpumperla/hyperas/issues/141).
