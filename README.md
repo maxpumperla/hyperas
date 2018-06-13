@@ -235,3 +235,8 @@ best_run, best_model = optim.minimize(model=model,
                                       notebook_name='simple_notebook')
 ```
 
+### How does hyperas work?
+
+All we do is parse the `data` and `model` templates and translate them into proper `hyperopt` by reconstructing the `space` object that's then passed to `fmin`. Most of the relevant code is found in [optim.py](https://github.com/maxpumperla/hyperas/blob/master/hyperas/optim.py) and [utils.py](https://github.com/maxpumperla/hyperas/blob/master/hyperas/utils.py)
+
+.
