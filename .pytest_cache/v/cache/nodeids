@@ -1,0 +1,18 @@
+[
+  "tests/test_e2e.py::test_simple", 
+  "tests/test_e2e.py::test_ensemble", 
+  "tests/test_functional_api.py::test_functional_api", 
+  "tests/test_lr_plateau.py::test_advanced_callbacks", 
+  "tests/test_optim.py::test_data", 
+  "tests/test_optim.py::test_data_function", 
+  "tests/test_utils.py::test_extract_imports", 
+  "tests/test_utils.py::test_remove_imports", 
+  "tests/test_utils.py::test_remove_imports_in_function", 
+  "tests/test_utils.py::test_remove_all_comments", 
+  "tests/test_utils.py::test_temp_string", 
+  "tests/test_utils.py::test_write_temp_files", 
+  "tests/test_utils.py::test_with_line_numbers", 
+  "tests/test_utils.py::test_determine_indent", 
+  "tests/test_utils.py::test_unpack_hyperopt_vals", 
+  "tests/test_utils.py::test_eval_hyperopt_space"
+]
