@@ -52,11 +52,12 @@ def model(X_train, Y_train, X_test, Y_test):
 
 def test_simple():
     X_train, Y_train, X_test, Y_test = data()
+    trials = Trials()
     best_run, best_model = optim.minimize(model=model,
                                           data=data,
                                           algo=tpe.suggest,
                                           max_evals=1,
-                                          trials=Trials(),
+                                          trials=trials,
                                           verbose=False)
 
 
