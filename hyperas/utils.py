@@ -74,7 +74,6 @@ def remove_all_comments(source):
 
 def temp_string(imports, model, data, functions, space):
     temp = (imports + "from hyperopt import fmin, tpe, hp, STATUS_OK, Trials\n" +
-            "from hyperas.distributions import conditional\n" +
             functions + data + model + "\n" + space)
     return temp
 
