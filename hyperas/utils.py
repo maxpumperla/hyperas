@@ -68,7 +68,7 @@ def remove_imports(source):
 
 def remove_all_comments(source):
     string = re.sub(re.compile("'''.*?'''", re.DOTALL), "", source)  # remove '''...''' comments
-    string = re.sub(re.compile("#.*?\n"), "\n", string)  # remove #...\n comments
+    string = re.sub(re.compile("(?<!('|\").)*#[^'\"]*?\n"), "\n", string)  # remove #...\n comments
     return string
 
 
