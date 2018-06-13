@@ -51,6 +51,8 @@ Note that before returning the model, to optimize,
 we also have to define which evaluation metric of the model is important to us.
 For example, in the following, we optimize for accuracy.
 
+**Note**: In the following code we use `'loss': -accuracy`, i.e. the negative of accuracy. That's because under the hood `hyperopt` will always minimize whatever metric you provide. If instead you want to actually want to minimize a metric, say MSE or another loss function, you keep a positive sign (e.g. `'loss': mse`).
+
 
 ```{python}
 from hyperas.distributions import uniform
@@ -235,3 +237,14 @@ best_run, best_model = optim.minimize(model=model,
                                       notebook_name='simple_notebook')
 ```
 
+### How does hyperas work?
+
+All we do is parse the `data` and `model` templates and translate them into proper `hyperopt` by reconstructing the `space` object that's then passed to `fmin`. Most of the relevant code is found in [optim.py](https://github.com/maxpumperla/hyperas/blob/master/hyperas/optim.py) and [utils.py](https://github.com/maxpumperla/hyperas/blob/master/hyperas/utils.py).
+
+### How to read the output of a hyperas model?
+
+Hyperas translates your script into `hyperopt` compliant code, see [here](https://github.com/maxpumperla/hyperas/issues/140) for some guidance on how to interpret the result.
+
+### What if I need more flexibility loading data and adapting my model?
+
+Hyperas is a convenience wrapper around Hyperopt that has some limitations. If it's not _convenient_ to use in your situation, simply don't use it -- and choose Hyperopt instead. All you can do with Hyperas you can also do with Hyperopt, it's just a different way of defining your model. If you want to squeeze some flexibility out of Hyperas anyway, take a look [here](https://github.com/maxpumperla/hyperas/issues/141).

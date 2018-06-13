@@ -45,8 +45,7 @@ def minimize(model,
     rseed: Integer random seed for experiments
     notebook_name: If running from an ipython notebook, provide filename (not path)
     verbose: Print verbose output
-    eval_space: Evaluate the best run in the search space such that 'choice's contain actually meaningful values instead
-                of mere indices
+    eval_space: Evaluate the best run in the search space such that 'choice's contain actually meaningful values instead of mere indices
     return_space: Return the hyperopt search space object (e.g. for further processing) as last return value
 
     Returns
@@ -97,9 +96,9 @@ def base_minimizer(model, data, functions, algo, max_evals, trials,
     temp_file = './temp_model.py'
     write_temp_files(model_str, temp_file)
 
-    if 'temp_model' in sys.modules:  
+    if 'temp_model' in sys.modules:
         del sys.modules["temp_model"]
-        
+
     try:
         from temp_model import keras_fmin_fnct, get_space
     except:

@@ -70,11 +70,14 @@ def model(X_train, Y_train, X_test, Y_test):
     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
 
 if __name__ == '__main__':
+    trials = Trials()
     best_run, best_model = optim.minimize(model=model,
                                           data=data,
                                           algo=tpe.suggest,
                                           max_evals=5,
-                                          trials=Trials())
+                                          trials=trials)
+    for trial in trials:
+        print(trial)
     X_train, Y_train, X_test, Y_test = data()
     print("Evalutation of best performing model:")
     print(best_model.evaluate(X_test, Y_test))
