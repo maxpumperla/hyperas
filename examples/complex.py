@@ -1,7 +1,7 @@
 from __future__ import print_function
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas import optim
-from hyperas.distributions import choice, uniform, conditional
+from hyperas.distributions import choice, uniform
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation
 from keras.datasets import mnist
@@ -48,7 +48,7 @@ def model(X_train, Y_train, X_test, Y_test):
     model.add(Dropout({{uniform(0, 1)}}))
 
     # If we choose 'four', add an additional fourth layer
-    if conditional({{choice(['three', 'four'])}}) == 'four':
+    if {{choice(['three', 'four'])}} == 'four':
         model.add(Dense(100))
         model.add({{choice([Dropout(0.5), Activation('linear')])}})
         model.add(Activation('relu'))

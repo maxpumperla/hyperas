@@ -1,4 +1,4 @@
-# Hyperas [![Build Status](https://travis-ci.org/maxpumperla/hyperas.svg?branch=master)](https://travis-ci.org/maxpumperla/hyperas)  [![PyPI version](https://badge.fury.io/py/hyperas.svg)](https://badge.fury.io/py/hyperas) 
+# Hyperas [![Build Status](https://travis-ci.org/maxpumperla/hyperas.svg?branch=master)](https://travis-ci.org/maxpumperla/hyperas)  [![PyPI version](https://badge.fury.io/py/hyperas.svg)](https://badge.fury.io/py/hyperas)
 A very simple convenience wrapper around hyperopt for fast prototyping with keras models. Hyperas lets you use the power of hyperopt without having to learn the syntax of it. Instead, just define your keras model as you are used to, but use a simple template notation to define hyper-parameter ranges to tune.
 
 ## Installation
@@ -73,7 +73,7 @@ from keras.models import Sequential
 from keras.utils import np_utils
 
 from hyperas import optim
-from hyperas.distributions import choice, uniform, conditional
+from hyperas.distributions import choice, uniform
 
 
 def data():
@@ -116,7 +116,7 @@ def model(x_train, y_train, x_test, y_test):
     model.add(Dropout({{uniform(0, 1)}}))
 
     # If we choose 'four', add an additional fourth layer
-    if conditional({{choice(['three', 'four'])}}) == 'four':
+    if {{choice(['three', 'four'])}} == 'four':
         model.add(Dense(100))
 
         # We can also choose between complete sets of layers

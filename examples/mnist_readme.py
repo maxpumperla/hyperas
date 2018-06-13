@@ -7,7 +7,7 @@ from keras.models import Sequential
 from keras.utils import np_utils
 
 from hyperas import optim
-from hyperas.distributions import choice, uniform, conditional
+from hyperas.distributions import choice, uniform
 
 
 def data():
@@ -50,7 +50,7 @@ def model(x_train, y_train, x_test, y_test):
     model.add(Dropout({{uniform(0, 1)}}))
 
     # If we choose 'four', add an additional fourth layer
-    if conditional({{choice(['three', 'four'])}}) == 'four':
+    if {{choice(['three', 'four'])}} == 'four':
         model.add(Dense(100))
 
         # We can also choose between complete sets of layers

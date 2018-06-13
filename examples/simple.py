@@ -64,6 +64,7 @@ def model(X_train, Y_train, X_test, Y_test):
     print('Test accuracy:', acc)
     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
 
+
 if __name__ == '__main__':
 
     X_train, Y_train, X_test, Y_test = data()
