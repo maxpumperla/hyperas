@@ -60,7 +60,6 @@ def test_simple():
                                           trials=trials,
                                           verbose=False)
 
-
 def ensemble_data():
     nb_classes = 10
     (X_train, y_train), (X_test, y_test) = mnist.load_data()

@@ -51,6 +51,8 @@ Note that before returning the model, to optimize,
 we also have to define which evaluation metric of the model is important to us.
 For example, in the following, we optimize for accuracy.
 
+**Note**: In the following code we use `'loss': -accuracy`, i.e. the negative of accuracy. That's because under the hood `hyperopt` will always minimize whatever metric you provide. If instead you want to actually want to minimize a metric, say MSE or another loss function, you keep a positive sign (e.g. `'loss': mse`).
+
 
 ```{python}
 from hyperas.distributions import uniform
