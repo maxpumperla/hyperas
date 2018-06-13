@@ -77,7 +77,7 @@ def test_temp_string():
     space = 'space'
     result = temp_string(imports, model, data, functions, space)
     assert result == "imports\nfrom hyperopt import fmin, tpe, hp, STATUS_OK, Trials\n" \
-                     "from hyperas.distributions import conditional\nfunctions\ndata\nmodel\n\nspace"
+                     "functions\ndata\nmodel\n\nspace"
 
 
 def test_write_temp_files():
