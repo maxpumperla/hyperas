@@ -27,7 +27,8 @@ def minimize(model,
              notebook_name=None,
              verbose=True,
              eval_space=False,
-             return_space=False):
+             return_space=False,
+             keep_temp=False):
     """
     Minimize a keras model for given data and implicit hyperparameters.
 
@@ -47,6 +48,7 @@ def minimize(model,
     verbose: Print verbose output
     eval_space: Evaluate the best run in the search space such that 'choice's contain actually meaningful values instead of mere indices
     return_space: Return the hyperopt search space object (e.g. for further processing) as last return value
+    keep_temp: Keep temp_model.py file on the filesystem
 
     Returns
     -------
@@ -63,7 +65,8 @@ def minimize(model,
                                      rseed=rseed,
                                      full_model_string=None,
                                      notebook_name=notebook_name,
-                                     verbose=verbose)
+                                     verbose=verbose,
+                                     keep_temp=keep_temp)
 
     best_model = None
     for trial in trials:
@@ -88,7 +91,7 @@ def minimize(model,
 
 def base_minimizer(model, data, functions, algo, max_evals, trials,
                    rseed=1337, full_model_string=None, notebook_name=None,
-                   verbose=True, stack=3):
+                   verbose=True, stack=3, keep_temp=False):
     if full_model_string is not None:
         model_str = full_model_string
     else:
@@ -105,8 +108,9 @@ def base_minimizer(model, data, functions, algo, max_evals, trials,
         print("Unexpected error: {}".format(sys.exc_info()[0]))
         raise
     try:
-        os.remove(temp_file)
-        os.remove(temp_file + 'c')
+        if not keep_temp:
+            os.remove(temp_file)
+            os.remove(temp_file + 'c')
     except OSError:
         pass
 
@@ -149,14 +153,15 @@ def best_ensemble(nb_ensemble_models, model, data, algo, max_evals,
     return VotingModel(model_list, voting, weights, nb_classes)
 
 
-def best_models(nb_models, model, data, algo, max_evals, trials, functions=None):
+def best_models(nb_models, model, data, algo, max_evals, trials, functions=None, keep_temp=False):
     base_minimizer(model=model,
                    data=data,
                    functions=functions,
                    algo=algo,
                    max_evals=max_evals,
                    trials=trials,
-                   stack=4)
+                   stack=4,
+                   keep_temp=keep_temp)
     if len(trials) < nb_models:
         nb_models = len(trials)
     scores = [trial.get('result').get('loss') for trial in trials]

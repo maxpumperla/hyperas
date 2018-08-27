@@ -248,3 +248,31 @@ Hyperas translates your script into `hyperopt` compliant code, see [here](https:
 ### What if I need more flexibility loading data and adapting my model?
 
 Hyperas is a convenience wrapper around Hyperopt that has some limitations. If it's not _convenient_ to use in your situation, simply don't use it -- and choose Hyperopt instead. All you can do with Hyperas you can also do with Hyperopt, it's just a different way of defining your model. If you want to squeeze some flexibility out of Hyperas anyway, take a look [here](https://github.com/maxpumperla/hyperas/issues/141).
+
+### Running hyperas in parallel?
+
+You can use hyperas to run multiple models in parallel with the use of mongodb (which you'll need to install and setup users for).
+ Here's a short example using MNIST:
+
+1. Copy and modify [`examples/mnist_distributed.py`](examples/mnist_distributed.py) (bump up `max_evals` if you like):
+2. Run `python mnist_distributed.py`. It will create a `temp_model.py` file. Copy this file to any machines that will be evaluating models.
+     It will then begin waiting for evaluation results
+3. On your other machines (make sure they have a python installed with all your dependencies, ideally with the same versions) run:
+    ```bash
+    export PYTHONPATH=/path/to/temp_model.py
+    hyperopt-mongo-worker --exp-key=experiment_key --mongo='mongo://username:pass@mongodb.host:27017/jobs'
+    ```
+4. Once `max_evals` have been completed, you should get an output with your best model. You can also look through 
+    your mongodb and examine the results, to get the best model out and run it, do:
+    
+    ```python
+    from pymongo import MongoClient
+    from keras.models import load_model
+    import tempfile
+    c = MongoClient('mongodb://username:pass@mongodb.host:27017/jobs')
+    best_model = c['jobs']['jobs'].find_one({'exp_key': 'mnist_test'}, sort=[('result.loss', -1)])
+    temp_name = tempfile.gettempdir()+'/'+next(tempfile._get_candidate_names()) + '.h5'
+    with open(temp_name, 'wb') as outfile:
+        outfile.write(best_model['result']['model_serial'])
+    model = load_model(temp_name)
+    ```
