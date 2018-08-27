@@ -260,7 +260,7 @@ You can use hyperas to run multiple models in parallel with the use of mongodb (
 3. On your other machines (make sure they have a python installed with all your dependencies, ideally with the same versions) run:
     ```bash
     export PYTHONPATH=/path/to/temp_model.py
-    hyperopt-mongo-worker --exp-key=experiment_key --mongo='mongo://username:pass@mongodb.host:27017/jobs'
+    hyperopt-mongo-worker --exp-key='mnist_test' --mongo='mongo://username:pass@mongodb.host:27017/jobs'
     ```
 4. Once `max_evals` have been completed, you should get an output with your best model. You can also look through 
     your mongodb and examine the results, to get the best model out and run it, do:
