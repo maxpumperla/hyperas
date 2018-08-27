@@ -60,3 +60,8 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+
+# IDE settings
+.idea/
+
+.pytest_cache

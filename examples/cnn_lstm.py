@@ -17,7 +17,7 @@ def data():
     max_features = 20000
     maxlen = 100
 
-    (X_train, y_train), (X_test, y_test) = imdb.load_data(nb_words=max_features, test_split=0.2)
+    (X_train, y_train), (X_test, y_test) = imdb.load_data(nb_words=max_features)
     X_train = sequence.pad_sequences(X_train, maxlen=maxlen)
     X_test = sequence.pad_sequences(X_test, maxlen=maxlen)
 
