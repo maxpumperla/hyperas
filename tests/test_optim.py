@@ -17,6 +17,7 @@ def test_data():
     Y_test = np_utils.to_categorical(y_test, nb_classes_return)
     return X_train, Y_train, X_test, Y_test
 
+
 def test_data_function():
     result = retrieve_data_string(test_data, verbose=False)
     assert 'return X_train, Y_train, X_test, Y_test' not in result
@@ -24,6 +25,7 @@ def test_data_function():
     assert 'nb_classes_return = 10' in result
     assert '(X_train, y_train), (X_test, y_test) = mnist.load_data()' in result
     assert 'Y_test = np_utils.to_categorical(y_test, nb_classes_return)' in result
+
 
 if __name__ == '__main__':
     test_data_function()

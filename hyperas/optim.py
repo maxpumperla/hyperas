@@ -12,7 +12,7 @@ from .ensemble import VotingModel
 from .utils import (
     remove_imports, remove_all_comments, extract_imports, temp_string,
     write_temp_files, determine_indent, with_line_numbers, unpack_hyperopt_vals,
-    eval_hyperopt_space)
+    eval_hyperopt_space, find_signature_end)
 
 sys.path.append(".")
 
@@ -281,8 +281,10 @@ def augmented_names(parts):
 
 
 def hyperopt_keras_model(model_string, parts, aug_parts, verbose=True):
-    first_line = model_string.split("\n")[0]
-    model_string = model_string.replace(first_line, "def keras_fmin_fnct(space):\n")
+    colon_index = find_signature_end(model_string)
+    func_sign_line_end = model_string.count("\n", 0, colon_index) + 1
+    func_sign_lines = "\n".join(model_string.split("\n")[:func_sign_line_end])
+    model_string = model_string.replace(func_sign_lines, "def keras_fmin_fnct(space):\n")
     result = re.sub(r"(\{\{[^}]+}\})", lambda match: aug_parts.pop(0), model_string, count=len(parts))
     if verbose:
         print('>>> Resulting replaced keras model:\n')
