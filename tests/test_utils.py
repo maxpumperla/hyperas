@@ -3,7 +3,7 @@ from hyperopt import hp
 from hyperas.utils import (
     extract_imports, remove_imports, remove_all_comments, temp_string,
     write_temp_files, with_line_numbers, determine_indent, unpack_hyperopt_vals,
-    eval_hyperopt_space)
+    eval_hyperopt_space, find_signature_end)
 
 TEST_SOURCE = """
 from __future__ import print_function
@@ -29,6 +29,16 @@ def foo():
     # a comment in a function
     import sys
     bar()
+"""
+
+TEST_SOURCE_4 = """
+@foo_bar(bar_foo)
+def foo(train_x=')\\':', train_y=")\\":",  # ):
+        test_x=lambda x: bar, test_y=bar[:, 0],
+        foo='''
+  ):):  
+\\'''', bar="") :
+    pass
 """
 
 
@@ -172,3 +182,8 @@ def test_eval_hyperopt_space():
 
     assert eval_hyperopt_space(space, test_vals) == result
     assert eval_hyperopt_space(space, test_vals_unpacked) == result
+
+
+def test_find_signature_end():
+    index = find_signature_end(TEST_SOURCE_4)
+    assert len(TEST_SOURCE_4) - 10, index

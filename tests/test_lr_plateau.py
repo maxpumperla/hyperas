@@ -1,16 +1,14 @@
 from __future__ import print_function
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas import optim
-from hyperas.distributions import choice, uniform
+from hyperas.distributions import choice
 
 from keras.models import Sequential
 from keras.layers import Dense, Activation
-from keras.optimizers import RMSprop
 
 from keras.datasets import mnist
 from keras.utils import np_utils
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping
-from hyperopt import rand
 
 
 def data():
@@ -45,6 +43,7 @@ def create_model(x_train, y_train, x_test, y_test):
     mae, mse = model.evaluate(x_test, y_test, verbose=0)
     print('MAE:', mae)
     return {'loss': mae, 'status': STATUS_OK, 'model': model}
+
 
 def test_advanced_callbacks():
     X_train, Y_train, X_test, Y_test = data()
