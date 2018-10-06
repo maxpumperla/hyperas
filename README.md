@@ -2,7 +2,7 @@
 A very simple convenience wrapper around hyperopt for fast prototyping with keras models. Hyperas lets you use the power of hyperopt without having to learn the syntax of it. Instead, just define your keras model as you are used to, but use a simple template notation to define hyper-parameter ranges to tune.
 
 ## Installation
-```{python}
+```python
 pip install hyperas
 ```
 
@@ -10,7 +10,7 @@ pip install hyperas
 
 Assume you have data generated as such
 
-```{python}
+```python
 def data():
     x_train = np.zeros(100)
     x_test = np.zeros(100)
@@ -21,7 +21,7 @@ def data():
 
 and an existing keras model like the following
 
-```{python}
+```python
 def create_model(x_train, y_train, x_test, y_test):
     model = Sequential()
     model.add(Dense(512, input_shape=(784,)))
@@ -54,7 +54,7 @@ For example, in the following, we optimize for accuracy.
 **Note**: In the following code we use `'loss': -accuracy`, i.e. the negative of accuracy. That's because under the hood `hyperopt` will always minimize whatever metric you provide. If instead you want to actually want to minimize a metric, say MSE or another loss function, you keep a positive sign (e.g. `'loss': mse`).
 
 
-```{python}
+```python
 from hyperas.distributions import uniform
 
 def create_model(x_train, y_train, x_test, y_test):
@@ -77,7 +77,7 @@ def create_model(x_train, y_train, x_test, y_test):
 
 The last step is to actually run the optimization, which is done as follows:
 
-```{python}
+```python
 best_run = optim.minimize(model=create_model,
                           data=data,
                           algo=tpe.suggest,
@@ -99,8 +99,9 @@ Check the "complete example" below for more details.
 - Swapping whole sets of layers
 
 
-```{python}
+```python
 from __future__ import print_function
+import numpy as np
 
 from hyperopt import Trials, STATUS_OK, tpe
 from keras.datasets import mnist
@@ -166,14 +167,15 @@ def create_model(x_train, y_train, x_test, y_test):
     model.compile(loss='categorical_crossentropy', metrics=['accuracy'],
                   optimizer={{choice(['rmsprop', 'adam', 'sgd'])}})
 
-    model.fit(x_train, y_train,
+    result = model.fit(x_train, y_train,
               batch_size={{choice([64, 128])}},
-              epochs=1,
+              epochs=2,
               verbose=2,
-              validation_data=(x_test, y_test))
-    score, acc = model.evaluate(x_test, y_test, verbose=0)
-    print('Test accuracy:', acc)
-    return {'loss': -acc, 'status': STATUS_OK, 'model': model}
+              validation_split=0.1)
+    #get the highest validation accuracy of the training epochs
+    validation_acc = np.amax(result.history['val_acc']) 
+    print('Best validation acc of epoch:', validation_acc)
+    return {'loss': -validation_acc, 'status': STATUS_OK, 'model': model}
 
 
 if __name__ == '__main__':
