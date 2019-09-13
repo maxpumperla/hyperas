@@ -180,3 +180,51 @@ def eval_hyperopt_space(space, vals):
     """
     unpacked_vals = unpack_hyperopt_vals(vals)
     return space_eval(space, unpacked_vals)
+
+
+def find_signature_end(model_string):
+    """
+    Find the index of the colon in the function signature.
+    :param model_string: string
+        source code of the model
+    :return: int
+        the index of the colon
+    """
+    index, brace_depth = 0, 0
+    while index < len(model_string):
+        ch = model_string[index]
+        if brace_depth == 0 and ch == ':':
+            break
+        if ch == '#':  # Ignore comments
+            index += 1
+            while index < len(model_string) and model_string[index] != '\n':
+                index += 1
+            index += 1
+        elif ch in ['"', "'"]:  # Skip strings
+            string_depth = 0
+            while index < len(model_string) and model_string[index] == ch:
+                string_depth += 1
+                index += 1
+            if string_depth == 2:
+                string_depth = 1
+            index += string_depth
+            while index < len(model_string):
+                if model_string[index] == '\\':
+                    index += 2
+                elif model_string[index] == ch:
+                    string_depth -= 1
+                    if string_depth == 0:
+                        break
+                    index += 1
+                else:
+                    index += 1
+            index += 1
+        elif ch == '(':
+            brace_depth += 1
+            index += 1
+        elif ch == ')':
+            brace_depth -= 1
+            index += 1
+        else:
+            index += 1
+    return index

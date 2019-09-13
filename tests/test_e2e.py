@@ -42,7 +42,7 @@ def model(X_train, Y_train, X_test, Y_test):
 
     model.fit(X_train, Y_train,
               batch_size={{choice([64, 128])}},
-              nb_epoch=1,
+              epochs=1,
               verbose=2,
               validation_data=(X_test, Y_test))
     score, acc = model.evaluate(X_test, Y_test, verbose=0)
