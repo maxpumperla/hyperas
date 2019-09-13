@@ -28,7 +28,8 @@ def minimize(model,
              verbose=True,
              eval_space=False,
              return_space=False,
-             keep_temp=False):
+             keep_temp=False,
+             data_args=None):
     """
     Minimize a keras model for given data and implicit hyperparameters.
 
@@ -49,6 +50,7 @@ def minimize(model,
     eval_space: Evaluate the best run in the search space such that 'choice's contain actually meaningful values instead of mere indices
     return_space: Return the hyperopt search space object (e.g. for further processing) as last return value
     keep_temp: Keep temp_model.py file on the filesystem
+    data_args: Arguments to be passed to data function
 
     Returns
     -------
@@ -66,7 +68,8 @@ def minimize(model,
                                      full_model_string=None,
                                      notebook_name=notebook_name,
                                      verbose=verbose,
-                                     keep_temp=keep_temp)
+                                     keep_temp=keep_temp,
+                                     data_args=data_args)
 
     best_model = None
     for trial in trials:
@@ -91,11 +94,11 @@ def minimize(model,
 
 def base_minimizer(model, data, functions, algo, max_evals, trials,
                    rseed=1337, full_model_string=None, notebook_name=None,
-                   verbose=True, stack=3, keep_temp=False):
+                   verbose=True, stack=3, keep_temp=False, data_args=None):
     if full_model_string is not None:
         model_str = full_model_string
     else:
-        model_str = get_hyperopt_model_string(model, data, functions, notebook_name, verbose, stack)
+        model_str = get_hyperopt_model_string(model, data, functions, notebook_name, verbose, stack, data_args=data_args)
     temp_file = './temp_model.py'
     write_temp_files(model_str, temp_file)
 
@@ -170,7 +173,7 @@ def best_models(nb_models, model, data, algo, max_evals, trials, functions=None,
     return model_list
 
 
-def get_hyperopt_model_string(model, data, functions, notebook_name, verbose, stack):
+def get_hyperopt_model_string(model, data, functions, notebook_name, verbose, stack, data_args):
     model_string = inspect.getsource(model)
     model_string = remove_imports(model_string)
 
@@ -195,7 +198,7 @@ def get_hyperopt_model_string(model, data, functions, notebook_name, verbose, st
     space = get_hyperopt_space(parts, hyperopt_params, verbose)
 
     functions_string = retrieve_function_string(functions, verbose)
-    data_string = retrieve_data_string(data, verbose)
+    data_string = retrieve_data_string(data, verbose, data_args)
     model = hyperopt_keras_model(model_string, parts, aug_parts, verbose)
 
     temp_str = temp_string(imports, model, data_string, functions_string, space)
@@ -215,7 +218,7 @@ def get_hyperopt_space(parts, hyperopt_params, verbose=True):
     return space
 
 
-def retrieve_data_string(data, verbose=True):
+def retrieve_data_string(data, verbose=True, data_args=None):
     data_string = inspect.getsource(data)
     first_line = data_string.split("\n")[0]
     indent_length = len(determine_indent(data_string))
@@ -223,6 +226,13 @@ def retrieve_data_string(data, verbose=True):
     r = re.compile(r'^\s*return.*')
     last_line = [s for s in reversed(data_string.split("\n")) if r.match(s)][0]
     data_string = data_string.replace(last_line, "")
+
+    required_arguments = inspect.getfullargspec(data).args
+    if required_arguments:
+        if data_args is None:
+            raise ValueError(
+                "Data function takes arguments {} but no values are passed via data_args".format(required_arguments))
+        data_string = "    {} = {}\n{}".format(', '.join(required_arguments), ', '.join(repr(x) for x in data_args),data_string)
 
     split_data = data_string.split("\n")
     for i, line in enumerate(split_data):

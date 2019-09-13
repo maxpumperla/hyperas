@@ -247,6 +247,32 @@ All we do is parse the `data` and `model` templates and translate them into prop
 
 Hyperas translates your script into `hyperopt` compliant code, see [here](https://github.com/maxpumperla/hyperas/issues/140) for some guidance on how to interpret the result.
 
+### How to pass arguments to data?
+
+Suppose you want your data function take an argument, specify it like this using positional arguments only (not keyword arguments):
+
+```python
+import pickle
+def data(fname):
+    with open(fname,'rb') as fh:
+        return pickle.load(fh)
+```
+Note that your arguments must be implemented such that `repr` can show them in their entirety (such as strings and numbers).
+If you want more complex objects, use the passed arguments to build them inside the `data` function.
+
+And when you run your trials, pass a tuple of arguments to be substituted in as `data_args`:
+
+```python
+best_run, best_model = optim.minimize(
+    model=model,
+    data=data,
+    algo=tpe.suggest,
+    max_evals=64,
+    trials=Trials(),
+    data_args=('my_file.pkl',)
+)
+``` 
+
 ### What if I need more flexibility loading data and adapting my model?
 
 Hyperas is a convenience wrapper around Hyperopt that has some limitations. If it's not _convenient_ to use in your situation, simply don't use it -- and choose Hyperopt instead. All you can do with Hyperas you can also do with Hyperopt, it's just a different way of defining your model. If you want to squeeze some flexibility out of Hyperas anyway, take a look [here](https://github.com/maxpumperla/hyperas/issues/141).
