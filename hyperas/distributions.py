@@ -9,3 +9,4 @@ from hyperopt.hp import normal
 from hyperopt.hp import qnormal
 from hyperopt.hp import lognormal
 from hyperopt.hp import qlognormal
+from hyperopt.hp import uniformint
