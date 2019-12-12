@@ -232,8 +232,7 @@ def retrieve_data_string(data, verbose=True, data_args=None):
         if data_args is None:
             raise ValueError(
                 "Data function takes arguments {} but no values are passed via data_args".format(required_arguments))
-        data_string = "    {} = {}\n{}".format(', '.join(required_arguments), ', '.join(repr(x) for x in data_args),data_string)
-
+        data_string = "\n".join("    {} = {}".format(x, repr(y)) for x, y in zip(required_arguments, data_args)) + data_string
     split_data = data_string.split("\n")
     for i, line in enumerate(split_data):
         split_data[i] = line[indent_length:] + "\n"
