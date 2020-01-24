@@ -29,7 +29,7 @@ def create_model(x_train, y_train, x_test, y_test):
     model.add(Dropout(0.2))
     model.add(Dense(512))
     model.add(Activation('relu'))
-    model.add(Dropout(0.2)
+    model.add(Dropout(0.2))
     model.add(Dense(10))
     model.add(Activation('softmax'))
 
