@@ -1,6 +1,3 @@
-This project is now archived. It's been fun working on it, but it's time for me to move on. Thank you for all the support and feedback over the last couple of years. If someone is interested in taking ownership, let's discuss. :v:
----
-
 # Hyperas [![Build Status](https://travis-ci.org/maxpumperla/hyperas.svg?branch=master)](https://travis-ci.org/maxpumperla/hyperas)  [![PyPI version](https://badge.fury.io/py/hyperas.svg)](https://badge.fury.io/py/hyperas)
 A very simple convenience wrapper around hyperopt for fast prototyping with keras models. Hyperas lets you use the power of hyperopt without having to learn the syntax of it. Instead, just define your keras model as you are used to, but use a simple template notation to define hyper-parameter ranges to tune.
 
