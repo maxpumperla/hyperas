@@ -1,0 +1,57 @@
+@InProceedings{pmlr-v28-bergstra13,
+	title = 	 {Making a Science of Model Search: Hyperparameter Optimization in Hundreds of Dimensions for Vision Architectures},
+	author = 	 {Bergstra, James and Yamins, Daniel and Cox, David},
+	booktitle = 	 {Proceedings of the 30th International Conference on Machine Learning},
+	pages = 	 {115--123},
+	year = 	 {2013},
+	editor = 	 {Dasgupta, Sanjoy and McAllester, David},
+	volume = 	 {28},
+	number =       {1},
+	series = 	 {Proceedings of Machine Learning Research},
+	address = 	 {Atlanta, Georgia, USA},
+	month = 	 {17--19 Jun},
+	publisher =    {PMLR},
+	pdf = 	 {http://proceedings.mlr.press/v28/bergstra13.pdf},
+	url = 	 {https://proceedings.mlr.press/v28/bergstra13.html},
+	abstract = 	 {Many computer vision algorithms depend on configuration settings that are typically hand-tuned in the course of evaluating the algorithm for a particular data set. While such parameter tuning is often presented as being incidental to the algorithm, correctly setting these parameter choices is frequently critical to realizing a method’s full potential. Compounding matters, these parameters often must be re-tuned when the algorithm is applied to a new problem domain, and the tuning process itself often depends on personal experience and intuition in ways that are hard to quantify or describe. Since the performance of a given technique depends on both the fundamental quality of the algorithm and the details of its tuning, it is sometimes difficult to know whether a given technique is genuinely better, or simply better tuned.     In this work, we propose a meta-modeling approach to support automated hyperparameter optimization, with the goal of providing practical tools that replace hand-tuning with a reproducible and unbiased optimization process. Our approach is to expose the underlying expression graph of how a performance metric (e.g. classification accuracy on validation examples) is computed from hyperparameters that govern not only how individual processing steps are applied, but even which processing steps are included.  A hyperparameter optimization algorithm transforms this graph into a program for optimizing that performance metric.  Our approach yields state of the art results on three disparate computer vision problems: a face-matching verification task (LFW), a face identification task (PubFig83) and an object recognition task (CIFAR-10), using a single broad class of feed-forward vision architectures.  }
+}
+
+@online{bergstra2012hyperopt,
+	title={Hyperot},
+	author={Bergstra, James and others},
+	year={2012},
+	publisher={GitHub},
+	url={https://github.com/hyperopt/hyperopt},
+}
+
+@online{chollet2015keras,
+	title={Keras},
+	author={Chollet, Francois and others},
+	year={2015},
+	publisher={GitHub},
+	url={https://github.com/fchollet/keras},
+}
+
+@online{jinja2008,
+	title={Jinja},
+	author={Ronacher, Armin and others},
+	year={2008},
+	publisher={GitHub},
+	url={https://github.com/pallets/jinja},
+}
+
+@misc{akiba2019optuna,
+	title={Optuna: A Next-generation Hyperparameter Optimization Framework},
+	author={Takuya Akiba and Shotaro Sano and Toshihiko Yanase and Takeru Ohta and Masanori Koyama},
+	year={2019},
+	eprint={1907.10902},
+	archivePrefix={arXiv},
+	primaryClass={cs.LG}
+}
+
+@misc{omalley2019kerastuner,
+	title        = {KerasTuner},
+	author       = {O'Malley, Tom and Bursztein, Elie and Long, James and Chollet, Fran\c{c}ois and Jin, Haifeng and Invernizzi, Luca and others},
+	year         = 2019,
+	howpublished = {\url{https://github.com/keras-team/keras-tuner}}
+}
