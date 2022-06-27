@@ -138,7 +138,8 @@ def base_minimizer(model, data, functions, algo, max_evals, trials,
              algo=algo,
              max_evals=max_evals,
              trials=trials,
-             rstate=np.random.RandomState(rseed),
+             #rstate=np.random.RandomState(rseed),
+             rstate=np.random.default_rng(rseed),
              return_argmin=True),
         get_space()
     )
